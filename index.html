@@ -48,6 +48,14 @@ p{margin:0;color:#cfcac2;max-width:62ch}
 .snd[aria-pressed="true"]{border-color:var(--amber);color:var(--amber)}
 .snd i{width:8px;height:8px;border-radius:50%;background:var(--mute)}
 .snd[aria-pressed="true"] i{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.mus .eq{display:flex;gap:2px;align-items:flex-end;height:11px}
+.mus .eq s{display:block;width:2px;height:3px;border-radius:1px;background:var(--mute);transition:background .2s}
+.mus[aria-pressed="true"]{border-color:var(--red);color:var(--bone);box-shadow:0 0 14px rgba(184,20,28,.45)}
+.mus[aria-pressed="true"] .eq s{background:var(--red);animation:eq .9s ease-in-out infinite}
+.mus[aria-pressed="true"] .eq s:nth-child(2){animation-delay:-.3s}.mus[aria-pressed="true"] .eq s:nth-child(3){animation-delay:-.6s}.mus[aria-pressed="true"] .eq s:nth-child(4){animation-delay:-.15s}
+@keyframes eq{0%,100%{height:3px}50%{height:11px}}
+@media (prefers-reduced-motion:reduce){.mus[aria-pressed="true"] .eq s{animation:none;height:8px}}
+@media (max-width:400px){.links{gap:8px}.snd{padding:7px 11px;font-size:12px}}
 @media (max-width:720px){.links a{display:none}}
 
 /* hero */
@@ -201,6 +209,7 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
   <div class="links">
     <a href="#work">Work</a><a href="#threed">3D</a><a href="#skills">Skills</a><a href="#about">About</a><a href="#contact">Contact</a>
     <button class="snd" id="snd" aria-pressed="false" type="button"><i></i><span>Sound off</span></button>
+    <button class="snd mus" id="mus" aria-pressed="false" type="button" title="Play “What Did I Miss?”"><b class="eq" aria-hidden="true"><s></s><s></s><s></s><s></s></b><span>What Did I Miss?</span></button>
   </div>
 </nav>
 
@@ -468,8 +477,8 @@ function oozeStop(){ if(oz) oz.g.gain.setTargetAtTime(0, ctx.currentTime, .18); 
 
 /* ---- background music: "What Did I Miss" loops quietly under everything ---- */
 const MUSIC_VOL = .2;
-let music = null, mGain = null, mStopT = 0;
-function musicStart(){ if(!soundOn || !ac()) return;
+let music = null, mGain = null, mStopT = 0, musicOn = false; // off on every visit; only the What Did I Miss? button starts it
+function musicStart(){ if(!musicOn || !ac()) return;
   if(!music){
     music = new Audio('audio/what-did-i-miss.mp3'); music.loop = true; music.preload = 'auto';
     const src = ctx.createMediaElementSource(music);
@@ -485,7 +494,10 @@ function musicStart(){ if(!soundOn || !ac()) return;
 function musicStop(){ if(!music) return;
   mGain.gain.cancelScheduledValues(ctx.currentTime);
   mGain.gain.setTargetAtTime(0, ctx.currentTime, .25);
-  clearTimeout(mStopT); mStopT = setTimeout(() => { if(!soundOn || document.hidden) music.pause(); }, 1000); }
+  clearTimeout(mStopT); mStopT = setTimeout(() => { if(!musicOn || document.hidden) music.pause(); }, 1000); }
+const musBtn = document.getElementById('mus');
+musBtn.addEventListener('click', () => { musicOn = !musicOn; musBtn.setAttribute('aria-pressed', musicOn ? 'true' : 'false');
+  musBtn.title = (musicOn ? 'Pause' : 'Play') + ' “What Did I Miss?”'; if(musicOn) musicStart(); else musicStop(); });
 
 /* ---- drum kit (every skill key is a drum) ---- */
 const DR = {
@@ -513,12 +525,12 @@ function drum(name){ if(!ready() || !DR[name]) return; DR[name](out(.5, .16), ct
 function setSound(on){
   soundOn = on; store.set('snd', on?'1':'0'); store.set('asked','1');
   sndBtn.setAttribute('aria-pressed', on?'true':'false'); sndBtn.querySelector('span').textContent = on?'Sound on':'Sound off';
-  if(on){ ac(); purr(); setTimeout(() => growl(false), 700); musicStart(); } else { oozeStop(); musicStop(); }
+  if(on){ ac(); purr(); setTimeout(() => growl(false), 700); } else oozeStop();
 }
 sndBtn.addEventListener('click', () => { greeted = true; setSound(!soundOn); });
 /* browsers only allow audio after the first click or key press: wake the audio then, with a greeting */
 let greeted = false;
-const wake = () => { if(greeted) return; greeted = true; if(soundOn){ ac(); purr(); setTimeout(() => growl(false), 650); musicStart(); } };
+const wake = () => { if(greeted) return; greeted = true; if(soundOn){ ac(); purr(); setTimeout(() => growl(false), 650); } };
 addEventListener('pointerdown', wake, {once:false, capture:true}); addEventListener('keydown', wake, {capture:true});
 sndBtn.setAttribute('aria-pressed', soundOn?'true':'false'); sndBtn.querySelector('span').textContent = soundOn?'Sound on':'Sound off';
 document.querySelectorAll('.gbtn').forEach(b => { b.addEventListener('mouseenter', squelch); b.addEventListener('pointerdown', bite); });
@@ -535,7 +547,7 @@ document.querySelectorAll('.tl .it').forEach((it,i) => it.addEventListener('mous
     ooze(speed);
     clearTimeout(stopT); stopT = setTimeout(() => { oozeStop(); if(moved > STEP*2) scrollLock(); moved = 0; vel = 0; }, 150);
   }, {passive:true});
-  addEventListener('visibilitychange', () => { if(document.hidden){ oozeStop(); musicStop(); } else if(soundOn && greeted) musicStart(); });
+  addEventListener('visibilitychange', () => { if(document.hidden){ oozeStop(); musicStop(); } else if(musicOn) musicStart(); });
 })();
 document.querySelector('.hero').addEventListener('pointermove', e => { if(e.clientX > innerWidth*.6) growl(true); });
 const seen = new Set();
