@@ -879,6 +879,7 @@ if(sc && window.THREE){
   const $ = (sel, root=document) => [...root.querySelectorAll(sel)], txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
   const pick = a => a[Math.floor(Math.random()*a.length)];
   const EMAIL = txt(document.getElementById('mail')) || 'shivwork111@gmail.com';
+  const clipKey = t => { let h = 0x811c9dc5; const n = t.toLowerCase().replace(/[^a-z0-9]+/g, ''); for(let i = 0; i < n.length; i++){ h ^= n.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
   const sayEmail = t => t.replace(EMAIL, EMAIL.replace(/@/, ' at ').replace(/\./g, ' dot ').replace(/(\d)/g, ' $1'));
 
   /* ---- 1. read the page into snippets: every project, study, skill, award, plus about and contact ---- */
@@ -939,17 +940,15 @@ if(sc && window.THREE){
     let body = keep.join(' ');
     const sents2 = askTools ? keep.map(x => x.replace(/^Tags:/, 'Made with and tagged:')) : keep.filter(x => !/^Tags:/.test(x)); if(sents2.length) body = sents2.join(' ');
     if(/\b(I|I'm|my|me)\b/.test(body) && !/^In his words/.test(body)) body = 'In his words: “' + body + '”';
-    let lead = '';
-    if(d.kind === 'project'){ const m = (d.meta || '').match(/^(\d{4})\s*·\s*(.+)$/);
-      const end = m || !/[.?!]$/.test(d.title) ? '.' : '';
-      lead = d.title + (m ? ' (' + m[1] + ', ' + m[2].toLowerCase().replace(/^ar /, 'AR ') + ')' : '') + end + ' '; }
+    const lead = leadOf(d);
     return { text: lead + body, go: d.id, kind: d.kind === 'project' && d.id === 'threed' ? (/panther/i.test(d.title) ? 'model' : 'render') : d.kind, score: skillScore(d) };
   }
 
   /* ---- humour: facts come straight from the page; a joke rides on every answer ---- */
   const BAGS = {};
   /* draw from a shuffled bag so the same line never repeats until the bag is empty */
-  function draw(key, pool){ if(!pool || !pool.length) return '';
+  const POOLS = {};
+  function draw(key, pool){ if(!pool || !pool.length) return ''; POOLS[key] = pool;
     if(!BAGS[key] || !BAGS[key].length){ const b = [...pool].sort(() => Math.random() - .5); if(BAGS[key + '#last'] && b.length > 1 && b[b.length - 1] === BAGS[key + '#last']) b.unshift(b.pop()); BAGS[key] = b; }
     const v = BAGS[key].pop(); BAGS[key + '#last'] = v; return v; }
   const QUIPS = {
@@ -967,6 +966,7 @@ if(sc && window.THREE){
     ai: ["Yes, we're aware of the irony.", "He uses AI. We are the AI. It's a whole ecosystem.", "Somewhere in that pipeline, a robot is very proud of him."],
     bonus: ["Fun fact: we know this because we live here.", "We read that part of the page with great intensity. And no eyes.", "Write that down. Or don't. We'll remember. We remember everything on this page."]
   };
+  const GREET = "We are the symbiote. We've read every page of Shiv. Twice. Ask us anything about him, or ask for a joke. Type, or tap the mic.";
   const SUGGEST = " Try asking what he's made, what he's best at, or what he's aiming for.";
   const DODGE = {
     huh: ["We didn't catch that. Our ears are mostly goo.", "Sorry, that went straight through us. Literally. We're semi-transparent.", "We blinked. We don't have eyelids, but we blinked. Say that again?", "That's either a question or a sneeze. Bless you, either way."],
@@ -993,6 +993,9 @@ if(sc && window.THREE){
   const S = (...v) => v; // a set of 2 or 3 ways to say the same true thing
   let TOOLSV = [];
 
+  function leadOf(d){ if(d.kind !== 'project') return ''; const m = (d.meta || '').match(/^(\d{4})\s*·\s*(.+)$/);
+    const end = m || !/[.?!]$/.test(d.title) ? '.' : '';
+    return d.title + (m ? ' (' + m[1] + ', ' + m[2].toLowerCase().replace(/^ar /, 'AR ') + ')' : '') + end + ' '; }
   /* ---- 3. what it should always handle itself: each one has several answers, all true, all with a joke ---- */
   const sk = n => { const k = (typeof SK !== 'undefined' ? SK : []).find(x => x[1].toLowerCase() === n.toLowerCase()); return k ? k[2] : '?'; };
   const INTENTS = [
@@ -1005,10 +1008,10 @@ if(sc && window.THREE){
     { id:'song', pri:1, k:['what is the song','which song','what song','the song','what did i miss','background music','music on this site','who made the song','whats the song','about the song'],
       v: S("The track is called What Did I Miss? Press the What Did I Miss? button in the top bar and it loops forever. We've heard it four hundred times. Still a banger.",
         "It's What Did I Miss? It plays when you hit the button up top, quietly under everything. Like us, but with better rhythm.") },
-    { id:'joke', pri:1, k:['joke','jokes','tell me a joke','make me laugh','something funny','tell me something funny','humor','humour','say something funny','pun'], r:() => ({ text: draw('jokes', JOKES) }) },
-    { id:'roast', pri:1, k:['roast','roast me','roast him','roast shiv','insult him','burn him'], r:q => /\b(me|myself)\b/.test(q) ? ({ text: draw('roastme', ["You're asking a blob of website goo to roast you. We don't need to. You've done it yourself.", "We'd roast you, but we only roast things we've read about. Send us your portfolio. Actually, don't.", "You came to a portfolio and asked the goo for abuse. Respect. Now go email Shiv like a normal person."]) })
+    { id:'joke', pri:1, f: S("Why is that funny? It isn't. We're goo. Laugh anyway.", "Too dark? We live in the dark. It comes with the territory."), k:['joke','jokes','tell me a joke','make me laugh','something funny','tell me something funny','humor','humour','say something funny','pun','crack a joke','make me smile','entertain me','bored','im bored','i am bored','say something funny','tell me something funny please'], r:() => ({ text: draw('jokes', JOKES) }) },
+    { id:'roast', pri:1, f: S("Why Unity? Because it's the only number on the page that's not showing off.", "Too harsh? Fine. His Unity score is 40 and climbing. Happy?", "Prove it? Scroll to the skills keyboard. Press G. Hear the shame. Actually it's just a drum."), k:['roast','roast me','roast him','roast shiv','insult him','burn him','roast him please','destroy shiv','make fun of shiv','say something mean about shiv','diss shiv'], r:q => /\b(me|myself)\b/.test(q) ? ({ text: draw('roastme', ["You're asking a blob of website goo to roast you. We don't need to. You've done it yourself.", "We'd roast you, but we only roast things we've read about. Send us your portfolio. Actually, don't.", "You came to a portfolio and asked the goo for abuse. Respect. Now go email Shiv like a normal person."]) })
         : ({ go:'skills', text: draw('roast', ["Roast Shiv? His Unity score is " + sk('Unity') + ". That's it. That's the roast. Everything else is annoyingly good.", "His Maya score is " + sk('Maya') + ". We have nothing else. It's frustrating, honestly.", "He built a talking goo monster for his portfolio instead of sleeping. Wait, that's not a roast. That's a flex."]) }) },
-    { id:'funfact', pri:1, k:['fun fact','fun facts','a fun fact','fun fact about shiv','tell me a fun fact','interesting fact','something interesting','random fact','tell me something about shiv','secret','tell me a secret','gossip'],
+    { id:'funfact', pri:1, f: S("Really. All true. Well, the facts are true. The jokes are optional.", "Why tell you? Because we can't keep secrets. We're semi-transparent."), k:['fun fact','fun facts','a fun fact','fun fact about shiv','tell me a fun fact','interesting fact','something interesting','random fact','tell me something about shiv','secret','tell me a secret','gossip','tell me something cool','something cool about shiv','surprise me','did you know'],
       v: S("Fun fact: his longest-standing relationship is with us. None of the others could keep up with a partner who's ninety percent goo and ten percent sarcasm.",
         "Fun fact: we're the only relationship of his that's never asked for space. We can't. We are the space. The bottom-right corner, specifically.",
         "Fun fact: his short film LOSER has 1,968 rendered frames and zero words of dialogue. Basically a silent film about not texting back.",
@@ -1017,47 +1020,57 @@ if(sc && window.THREE){
         "Fun fact: he was a certified game developer back in 2020. We were a puddle back in 2020. Look at us both now.",
         "Fun fact: he wrote a 27-section case report on Apple versus Meta. We read it. Well, we absorbed it. Same thing.",
         "Fun fact: all his relationships have been long distance except ours. We live in his website. That's basically moving in.") },
-    { id:'rizz', pri:1, go:'work', k:['rizz','rizz shiv','how to rizz','how do i rizz','how to rizz shiv','rizz him','impress shiv','impress him','how to impress him','how to impress shiv','win him over','flirt with shiv','flirt with him','charm shiv','charm him','get his attention','pick up line','pickup line','date shiv','how to get shiv','make shiv like me'],
+    { id:'rizz', pri:1, go:'work', f: S("Why AR/VR? Because the man wrote 27 sections about headsets. Nobody does that for a hobby. That's love.", "Really. Try it. Say spatial computing near him and watch him buffer.", "Prove it? Email him the words Meta Orion and time how fast he replies. Hehehe."), k:['rizz','rizz shiv','how to rizz','how do i rizz','how to rizz shiv','rizz him','impress shiv','impress him','how to impress him','how to impress shiv','win him over','flirt with shiv','flirt with him','charm shiv','charm him','get his attention','pick up line','pickup line','date shiv','how to get shiv','make shiv like me','how to woo shiv','woo shiv','make him fall for me','how to make shiv like me','how to get shiv','shiv ko kaise patau','patau','how to flirt','how do i get shiv to like me','how to impress','make shiv fall in love'],
       v: S("How to rizz Shiv? Good news: his standards are very low. Just whisper AR/VR. Slowly. Then spatial computing. He's yours. Hehehehe.",
         "Easy. Talk to him about AR/VR. That's it. That's the whole technique. Mention Meta Orion and he'll start blushing in low poly. Hehehehe.",
         "Step one: say you read his 27-section Apple versus Meta report. Step two: there is no step two. He's already in love. Hehehe.",
         "Try this line: are you an AR headset? Because you make reality look better. Works every time. On him. Only on him. Hehehehe.",
         "His standards are so low, an email about AR/VR internships counts as a love letter. " + EMAIL + ". Go on. We'll watch. Hehehe.") },
-    { id:'creator', pri:1, k:['is shiv your creator','your creator','creator','who made you','who created you','who built you','made you','created you','who coded you','who designed you','where did you come from','who is your maker','shiv made you'],
+    { id:'jarvis', pri:1, k:['jarvis','are you his jarvis','are you jarvis','his jarvis','like jarvis','are you his assistant','his assistant','personal assistant','assistant','are you siri','are you alexa','siri','alexa','butler','are you his butler','his ai'],
+      v: S("His Jarvis? Please. Jarvis had a billionaire. We have a design student with Blender and big dreams. We make it work.",
+        "We're less Jarvis, more gooey intern. We answer questions, play his song, and drip on the furniture.",
+        "Jarvis runs a whole suit. We run the bottom-right corner of a website. Different budget, same attitude.",
+        "Assistant is a strong word. We prefer emotional support blob."),
+      f: S("Fine. If we're his Jarvis, he owes us a suit. Two hundred pixels of goo is not a suit.", "Okay, we admit it. We do all his PR. Unpaid. Forever. Send help.", "Prove it? We just played his song and roasted his Unity score. That's more than Jarvis ever did.") },
+    { id:'howru', pri:1, k:['how are you','how r you','how are u','how r u','hows it going','how is it going','how do you feel','kaise ho','you good','are you okay','are you ok','how you doing','hows life','whats up','wassup','kya haal','sup'],
+      v: S("Gooey. Glowing. Slightly damp. So, the usual. How can we help you with Shiv?", "We're thriving. Someone scrolled past us earlier and we wobbled for a whole minute.", "Honestly? Living our best life in a two-hundred-pixel canvas. Ask us something about Shiv.") },
+    { id:'name', pri:1, k:['your name','whats your name','what is your name','do you have a name','what should i call you','what do i call you','tumhara naam','naam kya hai'],
+      v: S("We don't have a name. Shiv calls us the symbiote. We call ourselves the talent.", "Names are for things with birth certificates. Call us the symbiote. Or Your Gooey-ness. We answer to both.") },
+    { id:'creator', pri:1, f: S("Why did he make us? Probably to impress you. Is it working? Say yes.", "Really. Look at the code. Every line has his fingerprints. And our drool.", "How? Shaders, noise, a lot of nights, and one very bad idea that turned out great. Us."), k:['is shiv your creator','your creator','creator','who made you','who created you','who built you','made you','created you','who coded you','who designed you','where did you come from','who is your maker','shiv made you','did shiv make you','did shiv create you','are you made by shiv','who programmed you','who wrote you','did he build you'],
       v: S("Yes. Shiv is our creator. He made the shader, the noise and the voice. The attitude we grew ourselves.", "Shiv made us. One line of code at a time. We've mostly forgiven him for the Unity score.", "Technically, he built this site and we crawled out of it. He calls it a feature. We call it a birth story.") },
-    { id:'attached', pri:1, k:['are you attached','attached','attached to shiv','are you attached to shiv','bonded','are you bonded','connected to shiv','stuck to shiv','do you follow shiv'],
+    { id:'attached', pri:1, f: S("Why? He made us, and nobody else would take us. We're very sticky.", "Really. If you see goo on his keyboard, that's us. Saying hi.", "Prove it? We follow you down his whole page. You've seen it. You can't unsee it."), k:['are you attached','attached','attached to shiv','are you attached to shiv','bonded','are you bonded','connected to shiv','stuck to shiv','do you follow shiv'],
       v: S("Attached? We're bonded to his portfolio. If he deletes the repo, we go with it. No pressure, Shiv.", "Very. Like gum under a desk. Lovingly. Permanently.", "Attached? We're his longest relationship. None of the others could handle dating a symbiote. Their loss.", "Deeply. We follow his visitors around the whole page. Luckily restraining orders don't apply to websites.") },
-    { id:'shivtous', pri:1, k:['what is shiv to you','who is shiv to you','what is he to you','who is he to you','what does shiv mean to you','is shiv your friend','your relationship','are you friends','is shiv your boss','your boss','your master','your owner','your host','is he your host'],
+    { id:'shivtous', pri:1, f: S("Why? Because he gave us a home, a voice, and a job. In this economy.", "Really. He even gave us a voice. A deep one. We sound expensive.", "Is that weird? Yes. Is it working? Also yes."), k:['what is shiv to you','who is shiv to you','what is he to you','who is he to you','what does shiv mean to you','is shiv your friend','your relationship','are you friends','is shiv your boss','your boss','your master','your owner','your host','is he your host','are you his girlfriend','are you his gf','are you dating shiv','are you his pet','are you his friend','are you his partner','are you his sidekick','are you owned by shiv','are you his roommate'],
       v: S("Shiv is our host, our creator and our landlord. Rent is free. The job is talking about him all day. Luckily, he's interesting.", "He's family. Sticky, glowing family. He brings the talent; we bring the drool.", "He's the reason we exist and the only topic we're allowed to talk about. We've accepted this. Mostly.") },
-    { id:'likeshiv', pri:1, k:['do you like shiv','do you love shiv','do you like him','do you love him','is shiv nice','is shiv good','is he nice','is he a good person','do you hate shiv'],
+    { id:'likeshiv', pri:1, f: S("Why? He never deletes us. That's the bar, and he clears it daily.", "Really. We'd say it to his face, but we can't find his face. We're in a corner."), k:['do you like shiv','do you love shiv','do you like him','do you love him','is shiv nice','is shiv good','is he nice','is he a good person','do you hate shiv'],
       v: S("Love is a strong word. We prefer permanently adhered.", "We like him enough to live inside his website. That's basically a lease and a love letter.", "He made us, he feeds us visitors, and he never deletes us. That's love, in goo terms.") },
     { id:'help', pri:1, k:['what can you do','help','what can i ask','what do you know','how do you work','what are you for','commands','options','what should i ask'],
       v: S("Ask us about Shiv: his projects, his 3D work, his skills, his goals, or how to hire him. Ask for a joke, a roast, or the song. We do requests. Not refunds.",
         "We know everything on this page. Projects, renders, skills, awards, contact. We also tell jokes, roast Shiv, and play music. We're a full-service blob.",
         "Try: what has he made, what's he best at, what's he aiming for, or tell me a joke. We'll handle the rest. With great enthusiasm and no hands.") },
-    { id:'who', pri:1, kind:'bio', k:['who is shiv','who is he','tell me about shiv','about shiv','what does shiv do','what does he do','tell me about him','about him','introduce shiv','describe shiv','who is shiv shrivastav','shiv shrivastav','tell me about yourself shiv'], go:'about',
+    { id:'who', pri:1, kind:'bio', f: S("Why should you care? He builds 3D, motion and AI stuff, and he made a talking goo monster. Respect is earned.", "Really. Creative technologist, NMIMS, Mumbai. That's the official version. The unofficial version is: our dad."), k:['who is shiv','who is he','tell me about shiv','about shiv','what does shiv do','what does he do','tell me about him','about him','introduce shiv','describe shiv','who is shiv shrivastav','shiv shrivastav','tell me about yourself shiv','who dis','whos shiv','who is this guy','who is this','whose website is this','whose site is this','who owns this site','shiv kaun hai','kaun hai shiv','shiv kon hai','who even is shiv','what does this guy do','what is shiv','what do you know about shiv','tell me about the guy','who made this portfolio','whose portfolio'], go:'about',
       v: S("Shiv Shrivastav is a creative technologist working across AR/VR and AI. He builds where immersive media, 3D, motion design and AI meet, and studies Animation and VFX at NMIMS School of Design in Mumbai.",
         "He's Shiv Shrivastav: an Animation and VFX student at NMIMS in Mumbai, 2024 to 2028, who calls himself a creative technologist. Research first, then he makes it beautiful. He's looking for AR/VR internships.") },
     { id:'devdes', pri:1, kind:'bio', k:['designer or developer','designer or a developer','developer or designer','is he a designer','is he a developer','is he an artist','artist or','programmer or','is he technical','creative or technical'],
       v: S("Both, which is the point of creative technologist. Animation, VFX, 3D and motion design on one side; certificates in C, C++ and Java and app and game developer certs on the other.",
         "A bit of both. He studies Animation and VFX, models and lights in Blender, and also has C, C++ and Java courses plus WhiteHat Jr app and game developer certifications.") },
-    { id:'aims', pri:1, kind:'bio', go:'about', k:['aspire','aspiring','aspiration','aim','aiming','goal','goals','dream','future','career','become','want to be','wants to be','ambition','plans','where is he headed','five years'],
+    { id:'aims', pri:1, kind:'bio', go:'about', f: S("Why AR/VR? Look at his work: an AR explainer and a 27-section XR report. He's not subtle about it.", "Really. Seeking AR/VR internships, it says so right on the page. We don't make things up. We're goo with integrity."), k:['aspire','aspiring','aspiration','aim','aiming','goal','goals','dream','future','career','become','want to be','wants to be','ambition','plans','where is he headed','five years','what does he want','what is he trying to do','end goal','his vision','vision','mission','where does he want to work','dream job','what is he working towards','long term'],
       v: S("Shiv is becoming a creative technologist in AR/VR and AI: someone who builds where immersive media, 3D, motion design and AI meet. Right now he's studying Animation and VFX at NMIMS and seeking AR/VR and creative technologist internships.",
         "He's aiming for creative technology in AR/VR and AI, mixing 3D, motion design and AI. Step one: an AR/VR or creative technologist internship. Step two: we assume world domination, but he hasn't confirmed.") },
-    { id:'pitch', pri:1, kind:'contact', go:'about', k:['why should i hire','why hire','why should we hire','what makes him different','what makes him special','stand out','unique','why him','convince me','sell him','pitch'],
+    { id:'pitch', pri:1, kind:'contact', go:'about', f: S("Really? Look at the work. LOSER alone has 1,968 frames. That's commitment.", "Prove it? Every project on this page. And us. We're the proof. We're very convincing."), k:['why should i hire','why hire','why should we hire','what makes him different','what makes him special','stand out','unique','why him','convince me','sell him','pitch'],
       v: S("He researches before he builds, like his 27-section Apple vs Meta report. His top strengths are marketing psychology at " + sk('Marketing Psychology') + ", people management at " + sk('People Management') + " and analytical thinking at " + sk('Analytical Thinking') + ", and he uses AI as a real collaborator.",
         "He mixes animation, 3D and motion design with strategy. Marketing psychology " + sk('Marketing Psychology') + ", people management " + sk('People Management') + ", a 1,968-frame short film, and an XR case report. Plus he made us, and we're delightful.") },
-    { id:'job', pri:1, kind:'contact', go:'contact', k:['hire','hiring','internship','intern','job','jobs','looking for work','looking for a job','available','availability','open to work','work with','collaborate','collaboration','opportunity','recruit','is he free'],
+    { id:'job', pri:1, kind:'contact', go:'contact', k:['hire','hiring','internship','intern','job','jobs','looking for work','looking for a job','available','availability','open to work','work with','collaborate','collaboration','opportunity','recruit','is he free','is he hireable','can we hire him','can i hire him','is he open','does he want a job','open for internship','open to internships','looking for internship','job chahiye','available for work','is he taking work'],
       v: S("He's seeking AR/VR and creative technologist internships. Email " + EMAIL + ", or find him on LinkedIn and GitHub in the contact section.",
         "Yes, he's open to AR/VR and creative technologist internships. The fastest route is " + EMAIL + ". The links to LinkedIn and GitHub are at the bottom.") },
-    { id:'contact', pri:1, kind:'contact', go:'contact', k:['contact','email','mail','reach','reach him','get in touch','linkedin','github','connect','socials','social media','instagram','twitter','phone','number','how do i contact'],
+    { id:'contact', pri:1, kind:'contact', go:'contact', k:['contact','email','mail','reach','reach him','get in touch','linkedin','github','connect','socials','social media','instagram','twitter','phone','number','how do i contact','how to reach','how can i reach him','contact details','his email id','email id','dm him','message him','ping him','whatsapp','how do i talk to shiv','talk to shiv'],
       v: S("Email " + EMAIL + ". He's also on LinkedIn and GitHub; the links are in the contact section.", "The quickest way is " + EMAIL + ". LinkedIn and GitHub are linked at the bottom of the page. Phone numbers we keep to ourselves. We don't have one anyway.") },
     { id:'freelance', pri:1, k:['freelance','freelancing','remote','remotely','relocate','relocation','charge','rates','rate','price','pricing','salary','pay','cost','fees','hourly'],
       v: S("That's not in our files. Ask him at " + EMAIL + ". We'd negotiate for you, but we only accept payment in compliments.", "The page doesn't say. Email " + EMAIL + " and ask. We tried to set his rates once and he took away our CSS for a day.") },
-    { id:'weak', pri:1, kind:'skill', go:'skills', k:['weakness','weaknesses','bad at','worst','not good at','improve','improving','struggle','lowest','weakest','what is he bad at'],
+    { id:'weak', pri:1, kind:'skill', go:'skills', f: S("Why those? He's a 3D and motion person first. Real-time is the next level he's grinding.", "Really. Those are the lowest numbers on his keyboard. We checked. Twice.", "Is that bad? No. It's the exact skill he's chasing for AR/VR. Character arc."), k:['weakness','weaknesses','bad at','worst','not good at','improve','improving','struggle','lowest','weakest','what is he bad at'],
       v: S("His lowest scores are Unity at " + sk('Unity') + " and Maya at " + sk('Maya') + ", with 3ds Max and AR/VR at 45. He's working on the real-time and XR side, which is exactly where he's headed. Character development.",
         "Unity at " + sk('Unity') + ", Maya at " + sk('Maya') + ". That's the whole list of things he's not great at yet. Annoying, isn't it.") },
-    { id:'best', pri:1, kind:'skill', go:'skills', score:89, k:['best at','best skill','strongest','strongest skill','strength','strengths','top skill','superpower','what is he good at','good at what','what is he best at','his best skill'],
+    { id:'best', pri:1, kind:'skill', go:'skills', score:89, f: S("Why marketing psychology? He knows what makes people click. You're still here, aren't you.", "Really. Eighty-nine out of a hundred. We've watched him persuade a render to finish."), k:['best at','best skill','strongest','strongest skill','strength','strengths','top skill','superpower','what is he good at','good at what','what is he best at','his best skill','what is he great at','his talent','talents','what can he do best','what is he known for','best thing about him'],
       v: S("His strongest skills are marketing psychology at " + sk('Marketing Psychology') + ", Claude at " + sk('Claude') + ", people management at " + sk('People Management') + " and analytical thinking at " + sk('Analytical Thinking') + ". His top tool is Blender at " + sk('Blender') + ".",
         "Marketing psychology, " + sk('Marketing Psychology') + " out of 100. Then people management and Claude at 85 and analytical thinking at 83. In tools, Blender leads at " + sk('Blender') + ".") },
     { id:'tools', pri:1, kind:'section', go:'skills', k:['software','what software','what tools','tools','programs','apps does he use','what does he use','tool stack','his stack','tech stack','stack','what apps'],
@@ -1081,17 +1094,17 @@ if(sc && window.THREE){
     { id:'xr', pri:1, kind:'project', go:'work', k:['ar','vr','xr','augmented','augmented reality','virtual reality','mixed reality','spatial','spatial computing','headset','immersive','metaverse','vision pro'],
       v: S("AR/VR is where he's headed. He made Meta Orion, an AR explainer, and Apple vs Meta: The XR Race, a 27-section case report on spatial computing. He's seeking AR/VR internships; Unity is at " + sk('Unity') + " and climbing.",
         "For XR, look at Meta Orion, his 30-second AR glasses explainer, and his Apple vs Meta case report on why adoption doesn't simply follow specs. AR/VR and immersive sits at " + sk('AR/VR & Immersive') + " on his keyboard, for now.") },
-    { id:'bestproj', pri:1, kind:'project', go:'work', k:['best project','favourite project','favorite project','look at first','start with','which project','top project','recommend','your favourite','your favorite','must see'],
+    { id:'bestproj', pri:1, kind:'project', go:'work', f: S("Why LOSER? Zero dialogue, all feeling, cut to the beat. Even we got emotional, and we're mostly water."), k:['best project','favourite project','favorite project','look at first','start with','which project','top project','recommend','your favourite','your favorite','must see'],
       v: S("Our pick is LOSER: a dialogue-free animated short with 1,968 rendered frames. If you're hiring for AR/VR, start with Meta Orion and Apple vs Meta instead. We have taste. Questionable, but taste.",
         "Start with LOSER, the animated short, then the 3D lighting studies. For XR roles, Meta Orion. We'd show you in person, but we're a website.") },
-    { id:'projects', pri:1, kind:'section', go:'work', k:['what has he made','what did he make','what has he built','what did he build','his projects','projects','portfolio','show me his work','what has he done','his work','what does he make','work samples'],
+    { id:'projects', pri:1, kind:'section', go:'work', k:['what has he made','what did he make','what has he built','what did he build','his projects','projects','portfolio','show me his work','what has he done','his work','what does he make','work samples','what has shiv made','show me something','examples','any projects','his creations','what did shiv build','what has he worked on','work done','kya banaya'],
       r:() => { const o = KB.find(d => d.title === 'Projects'); return o ? { text: o.text } : more(); } },
     { id:'3d', pri:1, kind:'render', go:'threed', k:['his 3d work','3d work','3d','blender work','renders','render','3d stuff','modelling','modeling','3d models','lighting work','environments'],
       v: S("His 3D work, all in Blender: Golden Hour, Empty Classroom, lit for low sun; One Room, Four Lights, the same room lit as morning, sunset, neon night and late night; and the Faceted Panther you can spin.",
         "Three Blender pieces: a golden-hour classroom, one room re-lit four ways, and a low-poly faceted panther with amber eyes. Lighting is the story, he says. We agree. We live in the dark.") },
     { id:'whyloser', top:1, pri:1, kind:'project', go:'work', k:['why is it called','why the name','why called loser','why loser','name loser','title loser','meaning of loser'],
       v: S("The page doesn't say why it's called LOSER. It does say it's a 1:22 short told with no dialogue, cut to music at about 86 BPM. Ask him the story at " + EMAIL + ". Our theory: irony. Our other theory: we shouldn't have theories.") },
-    { id:'applewin', top:1, pri:1, kind:'project', go:'work', k:['who wins','who won','winner','apple or meta','meta or apple','which is better apple','who is winning','verdict','conclusion'],
+    { id:'applewin', top:1, pri:1, kind:'project', go:'work', f: S("Why not specs? Because people adopt what fits their lives, not what's fanciest. That's the report's whole point.", "Really. Twenty-seven sections. He did the homework so we don't have to."), k:['who wins','who won','winner','apple or meta','meta or apple','which is better apple','who is winning','verdict','conclusion'],
       v: S("His case report's point is that adoption doesn't simply follow specs: the most advanced XR device isn't always the one people adopt. For the full verdict, read all 27 sections. We read the summary. Twice.",
         "Specs don't automatically win. That's the big idea in Apple vs Meta: The XR Race. Who actually wins? Ask Shiv. We're legally a blob and can't make predictions.") },
     { id:'whypanther', top:1, pri:1, kind:'render', go:'threed', k:['why a panther','why panther','why the panther','why panthers','panther theme','whats with the panther'],
@@ -1102,7 +1115,7 @@ if(sc && window.THREE){
       v: S("His course at NMIMS runs 2024 to 2028, so he graduates in 2028. We're already planning the goo cake.", "2024 to 2028 at NMIMS. Graduation: 2028. We've asked to attend. They said no blobs in the auditorium.") },
     { id:'age', pri:1, k:['how old is he','his age','how old is shiv','age','birthday','born','date of birth'],
       v: S("His age isn't on the page, and we don't do guesses about humans. He's an NMIMS student, class of 2028, if that helps.", "Not in our files. We only know he's studying Animation and VFX from 2024 to 2028. Ask him; we're not allowed to card people.") },
-    { id:'where', pri:1, kind:'bio', go:'about', k:['where is he','where does he','where does he live','live','lives','based','location','city','hometown','from mumbai','mumbai','country','where is shiv'],
+    { id:'where', pri:1, kind:'bio', go:'about', f: S("Why Mumbai? Ask him. We'd move there, but we'd melt in May."), k:['where is he','where does he','where does he live','live','lives','based','location','city','hometown','from mumbai','mumbai','country','where is shiv'],
       v: S("Shiv is based in Mumbai, India. Great city. Very humid. We fit right in.", "Mumbai, India. We've never been. We're scared of the monsoon. We'd get diluted.", "He lives and studies in Mumbai. We live in his website. Slightly smaller apartment.") },
     { id:'awards', pri:1, kind:'award', go:'credentials', k:['award','awards','certification','certifications','certificate','certificates','achievements','achievement','credentials','trail','honours','honors','any awards'],
       r:() => { const o = KB.find(d => d.title === 'Certifications & awards'); return o ? { text: o.text } : more(); } },
@@ -1111,9 +1124,9 @@ if(sc && window.THREE){
     { id:'site', top:1, pri:1, k:['this website','this site','the website','built with','how was this made','how was this website made','how is this made','sounds','the sounds','sound effects','three.js','threejs','who designed this site','who made this website','website made'],
       v: S("This site is Shiv's own: one dark scroll with a panther and living goo, built with three.js. Every sound is synthesised in the browser, from the scroll ticks to the growl. And us. We're the premium feature.",
         "Three.js for the 3D, and all the sounds are generated live in your browser: the ratchet when you scroll, the goo, the drum keyboard. We're made of shader code and sarcasm.") },
-    { id:'whatru', pri:1, k:['what are you','are you real','are you an ai','are you a bot','are you human','are you alive','are you a robot','are you chatgpt','are you gemini','what is the symbiote','who are you really'],
+    { id:'whatru', pri:1, f: S("Really. We're code. Lovable, sticky code.", "Prove it? We talk, we wobble, we follow you around. What more do you want, a birth certificate?"), k:['what are you','are you real','are you an ai','are you a bot','are you human','are you alive','are you a robot','are you chatgpt','are you gemini','what is the symbiote','who are you really'],
       v: S("We're the symbiote: a blob of shader code and attitude that lives on Shiv's website. Real enough to roast him, not real enough to pay taxes.", "We're a few hundred lines of code, a noise function and a lot of opinions. Mostly opinions.", "Are we alive? We wobble, we talk, we follow you down the page. You tell us.") },
-    { id:'eat', pri:1, k:['what do you eat','are you hungry','hungry','do you eat','your food','feed you'],
+    { id:'eat', pri:1, f: S("Why kerning? It's crunchy.", "Really. Look at some websites. Someone's been eating their spacing. It wasn't us. Okay, it was us."), k:['what do you eat','are you hungry','hungry','do you eat','your food','feed you'],
       v: S("We eat bad kerning. Business is booming on other websites.", "Mostly scroll events. And the occasional footer. Shiv says to stop doing that.", "Compliments and Wi-Fi. Mostly Wi-Fi.") },
     { id:'urage', pri:1, k:['how old are you','your age','when were you born','your birthday'],
       v: S("We were born on the first page load. Every refresh is a birthday. Happy birthday to us.", "Younger than this page, older than your last refresh.") },
@@ -1127,13 +1140,13 @@ if(sc && window.THREE){
       v: S("Rude. Accurate, maybe, but rude. Ask us something about Shiv and we'll redeem ourselves.", "We've been called worse. By the CSS. Daily.", "Noted. Filed under things we'll pretend we didn't hear.") },
     { id:'offtopic', pri:1, k:['capital of','weather','prime minister','president','poem','write me','calculate','plus','minus','times','divided','news','stock','bitcoin','crypto','recipe','homework','translate','cricket','football','who won the','what time is it','what is the time','meaning of life','tell me about yourself'],
       r:() => ({ text: draw('offtopic', DODGE.offtopic) + SUGGEST }) },
-    { id:'thanks', pri:1, k:['thank','thanks','thank you','thx','ty','cheers','appreciate'],
+    { id:'thanks', pri:1, k:['thank','thanks','thank you','thx','ty','cheers','appreciate','thank u','tysm','dhanyavad','shukriya','thanks a lot'],
       v: S("Compliments and thanks feed us. Mostly Wi-Fi, but also those.", "You're welcome. We'll glow a little brighter now. Look. Glowing.", "Anytime. We have nowhere else to be. Literally. We're stuck here.") },
     { id:'compl', pri:1, k:['you are funny','you re funny','youre funny','so funny','funny','cool','nice','awesome','love it','love you','great','amazing','good job','well done','lol nice','you are cool','i like you'],
       v: S("Stop, you'll make us blush. We go red at the edges. It's a whole thing.", "We like you too. Not enough to bond. Yet.", "Tell Shiv. Then tell him to give us a raise.") },
-    { id:'hello', soft:1, k:['hello','hi','hey','yo','sup','namaste','hola','good morning','good evening','who are you','your name','whats your name','what is your name'],
+    { id:'hello', soft:1, k:['hello','hi','hey','yo','sup','namaste','hola','good morning','good evening','who are you','your name','whats your name','what is your name','hii','hiii','heyy','heya','yo yo','namaskar','good afternoon','greetings','hey there'],
       v: S("We are the symbiote. We've read every page of Shiv. Twice. The second time was for fun.", "Hello, little human. We live in this website. Rent is free. Ask us about Shiv.", "Ah, a visitor. Don't mind the tendrils, they're mostly decorative. What do you want to know about Shiv?") },
-    { id:'bye', pri:1, k:['bye','goodbye','see you','later','good night','gotta go','cya'],
+    { id:'bye', pri:1, k:['bye','goodbye','see you','later','good night','gotta go','cya','ok bye','see ya','tata','alvida','goodnight','bye bye'],
       v: S("Leaving already? Fine. We'll just sit here. In the dark. Glowing ominously.", "Bye. We'll keep your seat warm. And slightly damp.", "Go. Email Shiv. Come back. In that order.") }
   ];
 
@@ -1183,8 +1196,21 @@ if(sc && window.THREE){
     return hit ? docs.find(d => d.title === hit) : null; }
   function run(I, q){ const it = I.it; let rep = it.r ? it.r(q) : { text: draw('i-' + it.id, it.v) };
     if(!rep.kind && it.kind) rep.kind = it.kind; if(!rep.go && it.go) rep.go = it.go; if(it.score && !rep.score) rep.score = it.score; return rep; }
+  const FOLLOW = new Set(['why','why though','but why','really','seriously','are you sure','you sure','sure','prove it','for real','no way','how','how so','and','and then','then what','so','wait what','explain','explain that','what do you mean','meaning','is that true','true','lol why','why tho','what','huh why','is it','is he','wdym','how come','tell me why','why not','too harsh','that was harsh','thats harsh','harsh','too much','thats mean','mean','rude','thats rude','savage','damn','bruh','wow','lol','lmao','haha','hahaha','omg','no','yes','ok and','okay and','lol why','why lol','hmm','interesting']);
+  const FOLLOW_ANY = ["Why? Because the page says so, and we never argue with the page. It's bigger than us.", "Really. We don't make things up. We're goo with integrity.", "We'd explain, but we've told you everything the page tells us. Ask us something else and we'll overshare."];
   function answer(raw){
-    if(gibberish(raw)) return { text: draw('huh', DODGE.huh) + SUGGEST };
+    const fq = raw.toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    /* follow-ups branch off the last topic: exact reactions ("why", "lol", "too harsh"), or a short why/really question that isn't a new topic */
+    const shortWhy = /^(why|really|seriously|how come|prove|are you sure|is that)\b/.test(fq) && fq.split(' ').length <= 5;
+    if(lastId && (FOLLOW.has(fq) || (shortWhy && !((intent(fix(raw)) || {}).score >= 2)))){
+      const it = INTENTS.find(i => i.id === lastId), pool = it && it.f ? it.f : FOLLOW_ANY;
+      // answer "why?" with a why-line, "really?" with a really-line, "prove it" with a prove-line, reactions with a neutral line
+      const cat = /^(why|how)/.test(fq) ? 'why' : /^(really|seriously|are you sure|you sure|is that true|for real|no way|true|is it|is he)/.test(fq) ? 'really' : /^prove/.test(fq) ? 'prove' : 'react';
+      const lc = x => /^(why|how)\b/i.test(x) ? 'why' : /^really\b/i.test(x) ? 'really' : /^prove\b/i.test(x) ? 'prove' : 'neutral';
+      let c = pool.filter(x => lc(x) === cat); if(!c.length) c = pool.filter(x => lc(x) === 'neutral'); if(!c.length) c = pool;
+      return { text: draw('f-' + lastId + '-' + cat, c) }; }
+    if(gibberish(raw)){ lastId = null; return { text: draw('huh', DODGE.huh) + SUGGEST }; }
+    if(false) return { text: draw('huh', DODGE.huh) + SUGGEST };
     const q = fix(raw), I = intent(q);
     askTools = /\b(use|used|using|made with|software|tool|tools|how did he make|how was it made)\b/.test(q);
     const R = retrieve(q), top = R.ranked[0];
@@ -1199,13 +1225,26 @@ if(sc && window.THREE){
     else if(top && top.sc >= 1.6){ shown = new Set([top.d]); lastSec = top.d.id; rep = compose(top.d, R.terms); }
     else rep = { text: draw('none', DODGE.none) + SUGGEST };
     if(I && I.it.act) I.it.act();
-    lastId = fromIntent ? I.it.id : null;
+    lastId = fromIntent ? I.it.id : (rep.go ? '_page' : null); // page answers can be followed up too
     /* every answer gets a laugh: hand-written answers that are plain facts get a topic joke added */
     const plainFact = !fromIntent || ['who','devdes','study','contact','job','projects','awards','tools','code','pitch','best','ai','bestproj'].includes(lastId);
     if(plainFact){ const q2 = quipFor(rep); if(q2) rep.text += ' ' + q2; }
     return rep;
   }
   window.__symAsk = q => answer(q); // for testing in the console
+  window.__symLines = () => {
+    const all = new Set(), add = t => { if(t) all.add(t); };
+    FOLLOW_ANY.forEach(add);
+    INTENTS.forEach(it => { (it.v || []).forEach(add); (it.f || []).forEach(add);
+      if(it.r && !['more','another'].includes(it.id)) ['', 'roast me', 'roast shiv', 'python', 'java', 'games', 'hobbies', 'what tools for 3d', 'video edit', 'motion graphics', 'image editing', 'ui design', 'vector logo', 'vr', 'software'].forEach(q => { try { const r = it.r(q); r && add(r.text); } catch(_){} }); });
+    Object.values(POOLS).forEach(p => p.forEach(add));
+    Object.values(QUIPS).forEach(p => p.forEach(add)); JOKES.forEach(add); Object.values(DODGE).forEach(p => p.forEach(add)); add(SUGGEST); add(GREET);
+    docs.forEach(d => { add(leadOf(d)); d.text.split(/(?<=[.!?])\s+/).forEach(x => { add(x); add(x.replace(/^Tags:/, 'Made with and tagged:')); }); });
+    add('In his words:');
+    const frags = new Map();
+    all.forEach(t => sayEmail(t).split(/(?<=[.!?;:])\s+/).map(x => x.trim()).filter(x => /[a-z0-9]/i.test(x)).forEach(x => frags.set(clipKey(x), x)));
+    return [...frags].map(([key, text]) => ({ key, text }));
+  };
 
   /* ---- 4. voice: deep and slow; spoken a sentence at a time so long answers never stall ---- */
   let voice = null;
@@ -1216,10 +1255,45 @@ if(sc && window.THREE){
   let mouth = 0, guard = 0, speakId = 0;
   function setMode(m){ SYM.mode = m; mic.setAttribute('aria-pressed', m === 'listening' ? 'true' : 'false');
     talkBtn && talkBtn.setAttribute('aria-pressed', m === 'listening' ? 'true' : 'false'); }
-  function stopSpeaking(){ speakId++; clearInterval(mouth); clearTimeout(guard); if(TTS) TTS.cancel(); duck(false); if(SYM.mode === 'speaking') setMode('idle'); }
+  /* recorded symbiote voice (voice/<key>.mp3, listed in voice/index.json). Same voice on every device */
+  let VOICE = null, curSrc = null, mouthRaf = 0;
+  const clipCache = new Map();
+  function loadVoice(){ if(VOICE !== null) return; VOICE = false;
+    fetch('voice/index.json').then(r => r.ok ? r.json() : null).then(j => { VOICE = Array.isArray(j) ? new Set(j) : false; }).catch(() => {}); }
+  function clip(key){
+    if(!clipCache.has(key)) clipCache.set(key, fetch('voice/' + key + '.mp3').then(r => { if(!r.ok) throw new Error('clip'); return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => ctx.decodeAudioData(b, res, rej))).catch(e => { clipCache.delete(key); throw e; }));
+    return clipCache.get(key); }
+  function playClips(parts, id){
+    setMode('speaking'); duck(true);
+    const bufs = parts.map(p => clip(clipKey(p)));
+    const an = ctx.createAnalyser(); an.fftSize = 512; const data = new Uint8Array(an.fftSize), o = out(.95, .08); an.connect(o);
+    const lip = () => { if(id !== speakId) return; an.getByteTimeDomainData(data); let sum = 0; for(let i = 0; i < data.length; i++){ const v = (data[i] - 128)/128; sum += v*v; }
+      SYM.speak = Math.min(1, Math.sqrt(sum/data.length)*5); mouthRaf = requestAnimationFrame(lip); };
+    lip();
+    const done = () => { cancelAnimationFrame(mouthRaf); curSrc = null; if(id === speakId){ duck(false); setMode('idle'); } };
+    const next = i => {
+      if(id !== speakId) return;
+      if(i >= parts.length) return done();
+      bufs[i].then(buf => {
+        if(id !== speakId) return;
+        const src = ctx.createBufferSource(); src.buffer = buf; src.connect(an); curSrc = src;
+        src.onended = () => setTimeout(() => next(i + 1), 70);
+        src.start();
+      }).catch(() => { done(); speakDevice(parts.slice(i).join(' ')); }); // a clip failed: say the rest with the device voice
+    };
+    next(0);
+  }
+  function stopSpeaking(){ speakId++; clearInterval(mouth); clearTimeout(guard); cancelAnimationFrame(mouthRaf); if(curSrc){ try{ curSrc.stop(); }catch(_){} curSrc = null; } if(TTS) TTS.cancel(); duck(false); if(SYM.mode === 'speaking') setMode('idle'); }
   function speak(text){
-    if(!soundOn || !TTS){ setMode('idle'); return; }
+    if(!soundOn){ setMode('idle'); return; }
     stopSpeaking();
+    const parts = text.split(/(?<=[.!?;:])\s+/).map(x => x.trim()).filter(x => /[a-z0-9]/i.test(x));
+    if(VOICE && ac() && parts.length && parts.every(p => VOICE.has(clipKey(p)))) return playClips(parts, ++speakId);
+    speakDevice(text);
+  }
+  function speakDevice(text){
+    if(!TTS){ setMode('idle'); return; }
     const id = ++speakId, parts = text.split(/(?<=[.!?;:])\s+/).map(x => x.trim()).filter(Boolean);
     setMode('speaking'); duck(true);
     mouth = setInterval(() => { SYM.speak = Math.max(SYM.speak, .35 + Math.random()*.6); }, 130);
@@ -1256,8 +1330,9 @@ if(sc && window.THREE){
   }
   let greeted = false;
   function open(listenNow){
+    loadVoice();
     if(panel.hidden){ panel.hidden = false; SYM.docked = true; bubble(0, 1); bubble(.08, .7);
-      if(!greeted){ greeted = true; line('sp-it', "We are the symbiote. We've read every page of Shiv. Twice. Ask us anything about him, or ask for a joke. Type, or tap the mic." + (soundOn ? '' : ' (Sound is off, so we answer in text.)')); } }
+      if(!greeted){ greeted = true; line('sp-it', GREET + (soundOn ? '' : ' (Sound is off, so we answer in text.)')); } }
     if(listenNow) listen(); else if(matchMedia('(pointer:fine)').matches) setTimeout(() => qIn.focus(), 60);
   }
   function close(){ panel.hidden = true; SYM.docked = false; stopSpeaking(); if(SYM.mode === 'listening'){ try{ rec && rec.stop(); }catch(_){} } setMode('idle'); }
