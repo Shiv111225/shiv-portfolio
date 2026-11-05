@@ -57,6 +57,7 @@ p{margin:0;color:#cfcac2;max-width:62ch}
 .hero-art img{width:100%;height:100%;object-fit:cover;object-position:62% 40%;display:block;transform:scale(1.03);animation:breathe 9s ease-in-out infinite}
 @keyframes breathe{50%{transform:scale(1.06)}}
 @media (max-width:720px){.hero-art{width:100%;opacity:.6;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent);mask-image:linear-gradient(180deg,#000 55%,transparent)}.hero-art img{object-position:88% 35%}}
+#sym3d{position:absolute;left:calc(-1 * max(var(--gut), (100vw - 1180px) / 2));top:0;height:100%;width:100vw;display:block;z-index:1;pointer-events:none}
 #goo3d{position:absolute;left:calc(-1 * max(var(--gut), (100vw - 1180px) / 2));bottom:-8px;height:46%;width:100vw;display:block;z-index:2;pointer-events:none}
 .hero-txt{position:relative;z-index:3;padding-block:40px 120px}
 .hero-txt .eyebrow{color:var(--amber)}
@@ -205,6 +206,7 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
 
 <header class="hero" id="top">
   <div class="hero-art" aria-hidden="true"><img src="panther.jpg" alt=""></div>
+  <canvas id="sym3d" aria-hidden="true"></canvas>
   <canvas id="goo3d" aria-hidden="true"></canvas>
   <div class="hero-txt">
     <div class="eyebrow">Creative Technologist · AR/VR &amp; AI</div>
@@ -343,6 +345,7 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
     <div class="cta" style="margin-top:0">
       <button class="gbtn" id="copy" type="button"><span class="body"><span class="pill" style="min-width:250px"></span><span class="drip"></span><span class="drip"></span><span class="drip"></span><span class="drip"></span></span><span class="shine"></span><span class="lbl">Let's collaborate · copy email</span></button>
       <a class="ghost" href="https://www.linkedin.com/in/shiv-shrivastav-321413323" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="ghost" href="https://github.com/Shiv111225" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
     <div class="copied" id="copied" aria-live="polite"></div>
   </div>
@@ -588,6 +591,115 @@ if(window.THREE && THREE.MarchingCubes){
     if (fx.update) fx.update(); renderer.render(scene, cam);
   }
   function loop(){ if(!active) return; const t=(performance.now()-t0)/1000; frame(t); if(!RM) requestAnimationFrame(loop); }
+  loop();
+}
+/* ---------------- 3D symbiote (living liquid mass, reaches for the cursor) ---------------- */
+const sc = document.getElementById('sym3d');
+if(sc && window.THREE){
+  const NOISE = `
+  vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+  vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+  vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+  vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+  float snoise(vec3 v){
+    const vec2 C=vec2(1.0/6.0,1.0/3.0); const vec4 D=vec4(0.0,0.5,1.0,2.0);
+    vec3 i=floor(v+dot(v,C.yyy)); vec3 x0=v-i+dot(i,C.xxx);
+    vec3 g=step(x0.yzx,x0.xyz); vec3 l=1.0-g; vec3 i1=min(g.xyz,l.zxy); vec3 i2=max(g.xyz,l.zxy);
+    vec3 x1=x0-i1+C.xxx; vec3 x2=x0-i2+C.yyy; vec3 x3=x0-D.yyy;
+    i=mod289(i);
+    vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
+    float n_=0.142857142857; vec3 ns=n_*D.wyz-D.xzx;
+    vec4 j=p-49.0*floor(p*ns.z*ns.z); vec4 x_=floor(j*ns.z); vec4 y_=floor(j-7.0*x_);
+    vec4 x=x_*ns.x+ns.yyyy; vec4 y=y_*ns.x+ns.yyyy; vec4 h=1.0-abs(x)-abs(y);
+    vec4 b0=vec4(x.xy,y.xy); vec4 b1=vec4(x.zw,y.zw);
+    vec4 s0=floor(b0)*2.0+1.0; vec4 s1=floor(b1)*2.0+1.0; vec4 sh=-step(h,vec4(0.0));
+    vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy; vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+    vec3 p0=vec3(a0.xy,h.x); vec3 p1=vec3(a0.zw,h.y); vec3 p2=vec3(a1.xy,h.z); vec3 p3=vec3(a1.zw,h.w);
+    vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+    p0*=norm.x; p1*=norm.y; p2*=norm.z; p3*=norm.w;
+    vec4 m=max(0.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0); m=m*m;
+    return 42.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+  }`;
+  const U = { uTime:{value:0}, uMouse:{value:new THREE.Vector3(0,0,3)}, uAgit:{value:0} };
+  const mat = new THREE.ShaderMaterial({
+    uniforms: U, transparent: true,
+    vertexShader: `
+      uniform float uTime; uniform vec3 uMouse; uniform float uAgit;
+      varying vec3 vN; varying vec3 vV; varying vec3 vP; varying float vD;
+      ${NOISE}
+      float field(vec3 p){
+        float t = uTime*.35;
+        float n = snoise(p*1.1 + vec3(t, t*.6, -t))*.30 + snoise(p*2.4 - vec3(t*1.3))*.08;
+        float ridge = 1.0 - abs(snoise(p*3.2 + vec3(0.0, t*2.0, 0.0)));
+        n += pow(ridge, 8.0)*(.07 + uAgit*.4);
+        float d = distance(normalize(p), normalize(uMouse));
+        n += smoothstep(.9, 0.0, d)*(.22 + uAgit*.5);
+        return n;
+      }
+      void main(){
+        vec3 p = position, n = normalize(normal);
+        float disp = field(p); vec3 q = p + n*disp;
+        vec3 ta = normalize(cross(n, abs(n.y) < .99 ? vec3(0.,1.,0.) : vec3(1.,0.,0.))), bi = normalize(cross(n, ta));
+        vec3 pa = p + ta*.01; pa += normalize(pa)*field(pa);
+        vec3 pb = p + bi*.01; pb += normalize(pb)*field(pb);
+        vD = disp; vP = p; vN = normalize(normalMatrix*normalize(cross(pa - q, pb - q)));
+        vec4 mv = modelViewMatrix*vec4(q, 1.0); vV = -mv.xyz; gl_Position = projectionMatrix*mv;
+      }`,
+    fragmentShader: `
+      uniform float uTime; uniform float uAgit;
+      varying vec3 vN; varying vec3 vV; varying vec3 vP; varying float vD;
+      ${NOISE}
+      void main(){
+        vec3 N = normalize(vN), V = normalize(vV);
+        vec3 L1 = normalize(vec3(-.5,.8,.7)), L2 = normalize(vec3(.8,.1,-.4));
+        float s1 = pow(max(dot(reflect(-L1,N),V),0.), 90.), s2 = pow(max(dot(reflect(-L2,N),V),0.), 30.);
+        float fres = pow(1. - max(dot(N,V),0.), 3.);
+        vec3 red = vec3(.85,.07,.06), amber = vec3(.95,.66,.25);
+        float t = uTime*.5;
+        float v = abs(snoise(vP*2.2 + vec3(0., t, t*.5)));
+        float veins = smoothstep(.03, 0., v) + smoothstep(.02, 0., abs(snoise(vP*4.5 - vec3(t*.8))))*.5;
+        float pulse = .55 + .45*sin(uTime*2. + vP.y*3.);
+        vec3 col = vec3(.012,.010,.012) + max(dot(N,L1),0.)*.05;
+        col += vec3(.95) * s1 * .75 + red * s2 * .5;
+        col += red * fres * .9;
+        col += mix(red, amber, .35) * veins * (.5 + uAgit*.8) * pulse * 1.4;
+        col += red * smoothstep(0., -.3, vD) * .12;
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  });
+  const R = new THREE.WebGLRenderer({canvas:sc, alpha:true, antialias:true});
+  R.setPixelRatio(Math.min(2, devicePixelRatio||1));
+  const S = new THREE.Scene(), C = new THREE.PerspectiveCamera(35, 1, .1, 50); C.position.set(0, 0, 7);
+  const small = innerWidth < 720;
+  const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(1, small ? 40 : 80), mat); S.add(blob);
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3(), sph = new THREE.Sphere(new THREE.Vector3(), 1.3);
+  let target = new THREE.Vector2(), agit = 0, active = true, last = performance.now(), home = new THREE.Vector3();
+  function size(){ const w = sc.clientWidth, h = sc.clientHeight; if(!w||!h) return; R.setSize(w, h, false); C.aspect = w/h; C.updateProjectionMatrix();
+    // world-space viewport size at z=0, used to place the mass between the name and the panther's head
+    const vh = 2*Math.tan(THREE.MathUtils.degToRad(17.5))*7, vw = vh*C.aspect;
+    if(w < 720){ home.set(vw*.26, -vh*.3, 0); blob.scale.setScalar(.6); }
+    else { home.set(vw*.13, -vh*.14, 0); blob.scale.setScalar(Math.min(1.2, vh*.17)); }
+    blob.position.copy(home); }
+  size(); addEventListener('resize', size);
+  addEventListener('pointermove', e => { const r = sc.getBoundingClientRect();
+    const nx = ((e.clientX - r.left)/r.width)*2 - 1, ny = -((e.clientY - r.top)/r.height)*2 + 1;
+    agit = Math.min(1, agit + Math.hypot(nx - target.x, ny - target.y)*3); target.set(nx, ny); });
+  addEventListener('pointerdown', () => { agit = 1; });
+  new IntersectionObserver(es => { const was = active; active = es[0].isIntersecting; if(active && !was) loop(); }, {threshold:0}).observe(sc);
+  function loop(){
+    if(!active) return;
+    const now = performance.now(), dt = Math.min(.05, (now - last)/1000); last = now;
+    U.uTime.value += dt*(RM ? .2 : 1);
+    agit *= .95; U.uAgit.value += (agit - U.uAgit.value)*.1;
+    ndc.lerp(target, .08); ray.setFromCamera(ndc, C);
+    sph.center.copy(blob.position); sph.radius = 1.3*blob.scale.x;
+    if(ray.ray.intersectSphere(sph, hit)){ blob.worldToLocal(hit); U.uMouse.value.lerp(hit, .15); }
+    else { ray.ray.closestPointToPoint(blob.position, hit); blob.worldToLocal(hit); U.uMouse.value.lerp(hit.multiplyScalar(3), .05); }
+    blob.rotation.y = U.uTime.value*.12 + ndc.x*.4; blob.rotation.x = ndc.y*.3;
+    blob.position.x = home.x + ndc.x*.15; blob.position.y = home.y + ndc.y*.1 + Math.sin(U.uTime.value*.8)*.05;
+    R.render(S, C);
+    requestAnimationFrame(loop);
+  }
   loop();
 }
 /* ---------------- 3D panther (drag to spin) ---------------- */
