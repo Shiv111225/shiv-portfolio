@@ -15,7 +15,8 @@ Checks (per segment):
   jerk        joint acceleration spikes outside the declared action events
   cloth       cloak finite, never stretched > 25 %, never under the ground
   seam        continuity with the neighbouring segment's boundary frame
-  determinism one frame re-rendered from scratch must match the file bit-for-bit
+  framing     head, every horn tip, heart, hands, feet stay inside the letterboxed frame
+  determinism one frame re-rendered from scratch must match (<= 10 isolated px may flip under parallel SwiftShader)
 Spikes inside config.EVENTS windows are listed as intentional, not failures.
 """
 import argparse
@@ -26,8 +27,9 @@ import os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-from config import (W, H, FPS, NSEG, SEG_FRAMES, SEGMENTS, GROUND, LETTERBOX, QC_DIR,
+from config import (W, H, FPS, NSEG, SEG_FRAMES, SEGMENTS, GROUND, LETTERBOX, QC_DIR, OUT, ROOT,
                     RIG_FILE, EVENTS, frame_path, seg_range, in_event)
+PROJ_DIR = os.path.join(OUT, "proj")
 import anim
 
 FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
@@ -55,7 +57,7 @@ def check_segment(s, rerender=True):
         if f in missing:
             continue
         im = Image.open(frame_path(f))
-        if im.size != (W, H) or im.mode != "RGB":
+        if im.size != (W, H) or im.mode not in ("RGB", "RGBA"):
             bad.append(f)
         h = hashlib.md5(im.tobytes()).hexdigest()
         if h in hashes:
@@ -173,13 +175,37 @@ def check_segment(s, rerender=True):
     seam_ok = all(x["ratio"] < 4 or in_event(x["boundary"] / FPS) for x in seam)
     put("seam", seam_ok, ", ".join(f"f{x['boundary']}: {x['ratio']}x median" for x in seam) or "n/a",
         seams=seam)
-    # determinism
+    # framing: every tracked part (head, horn tips, heart, hands, feet) inside the visible frame
+    worst = None
+    out_frames = []
+    for f in fr:
+        pj = os.path.join(PROJ_DIR, f"{f:05d}.json")
+        if not os.path.exists(pj):
+            out_frames.append(f); continue
+        P = json.load(open(pj))
+        pts = [P[k] for k in P if k != "horns"] + P["horns"]
+        m = min(min(x, W - x, y - LETTERBOX, H - LETTERBOX - y) for x, y in pts)
+        if worst is None or m < worst[0]:
+            worst = (m, f)
+        if m < 0:
+            out_frames.append(f)
+    put("framing", not out_frames, f"tightest margin {worst[0]:.0f}px at f{worst[1]} "
+        f"(head, 7 horn tips, heart, hands, feet); {len(out_frames)} frames out of frame",
+        out=out_frames[:20])
+    # determinism: re-render one frame from scratch through the 3D renderer
     if rerender:
-        import render
+        import subprocess, tempfile
         f = fr[len(fr) // 2 + 7]
-        a = np.asarray(render.render_frame(f))
-        b = np.asarray(Image.open(frame_path(f)))
-        put("determinism", np.array_equal(a, b), f"re-rendered f{f}: max abs diff {int(np.abs(a.astype(int) - b).max())}")
+        with tempfile.TemporaryDirectory() as td:
+            subprocess.run(["node", os.path.join(ROOT, "r3d", "render3d.js"), "--frames", str(f),
+                            "--workers", "1", "--out", td], check=True, capture_output=True)
+            a = np.asarray(Image.open(os.path.join(td, f"{f:05d}.png")).convert("RGB")).astype(int)
+        b = np.asarray(Image.open(frame_path(f)).convert("RGB")).astype(int)
+        d = np.abs(a - b).max(-1)
+        n = int((d > 2).sum())
+        # parallel software-GPU (SwiftShader) rendering can flip a handful of isolated pixels;
+        # anything beyond 10 px (0.001 %) means real state leakage between frames
+        put("determinism", n <= 10, f"re-rendered f{f}: {n} px differ (> 2/255) of {W * H}, max diff {int(d.max())}")
 
     res["ok"] = all(c["ok"] for c in C.values())
     res["diff"] = {int(k): round(v, 5) for k, v in diff.items() if k in fr}

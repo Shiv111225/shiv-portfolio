@@ -2,3 +2,9 @@ out/frames/
 out/rig.npz
 out/ashen_cantor.mp4
 __pycache__/
+out/springs_*.npz
+out/proj/
+out/anim.bin
+out/anim.json
+out/pipeline.log
+r3d/node_modules/

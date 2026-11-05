@@ -143,10 +143,10 @@ C["zoom"] = Curve([(0, 1.0), (5, 1.04), (10, 1.15), (14.6, 1.28), (16.0, 1.24), 
 ARM = {
     "n": dict(
         a=Curve([(0, 0.6), (5.8, 0.6), (6.6, 0.5), (8.0, 0.12), (8.5, 0.5), (9.4, 2.25),
-                 (9.9, 2.2), (10.5, 0.35), (14.6, 0.35), (15.2, 0.1), (16.2, -0.65),
+                 (9.9, 2.2), (10.6, 0.18), (14.6, 0.18), (15.2, 0.1), (16.2, -0.65),
                  (16.6, 1.05), (18.4, 0.95), (19.2, 0.3), (20.0, 0.4), (20.9, 3.4), (21.18, 3.3),
                  (21.32, 1.0), (21.42, 0.35), (22.0, 0.25), (24.5, 0.3), (30, 0.18)]),
-        e=Curve([(0, 0.55), (5.8, 0.55), (8.0, 0.3), (9.4, 0.3), (10.5, 0.35), (15.2, 0.4),
+        e=Curve([(0, 0.55), (5.8, 0.55), (8.0, 0.3), (9.4, 0.3), (10.6, 0.6), (14.6, 0.6), (15.2, 0.4),
                  (16.2, 1.25), (16.6, 0.25), (18.4, 0.3), (19.2, 0.35), (20.9, 0.65),
                  (21.18, 0.6), (21.32, 0.08), (21.6, 0.2), (22.4, 0.4), (30, 0.4)]),
         w=Curve([(0, 0.1), (8.0, 0.15), (9.4, -0.15), (10.5, 0.2), (16.2, 0.4), (16.6, -0.1),
@@ -161,11 +161,11 @@ ARM = {
     ),
     "f": dict(
         a=Curve([(0, 0.55), (5.8, 0.55), (6.8, 0.45), (8.2, 0.1), (8.7, 0.5), (9.6, 2.0),
-                 (10.0, 1.95), (10.7, 0.3), (14.6, 0.3), (15.2, 0.05), (16.2, -0.75),
+                 (10.0, 1.95), (10.8, 0.14), (14.6, 0.14), (15.2, 0.05), (16.2, -0.75),
                  (16.6, 0.8), (18.4, 0.7), (19.2, 0.2), (20.9, -0.2), (21.35, 0.4),
                  (22.4, 0.3), (23.0, -0.75), (23.15, 0.4), (23.3, 2.0), (23.45, 2.3),
                  (24.2, 0.6), (30, 0.15)]),
-        e=Curve([(0, 0.5), (5.8, 0.5), (8.2, 0.3), (9.6, 0.35), (10.7, 0.35), (16.2, 1.3),
+        e=Curve([(0, 0.5), (5.8, 0.5), (8.2, 0.3), (9.6, 0.35), (10.8, 0.55), (14.6, 0.55), (16.2, 1.3),
                  (16.6, 0.3), (18.4, 0.35), (20.9, 0.6), (22.4, 0.5), (23.0, 1.1),
                  (23.3, 0.15), (24.2, 0.45), (30, 0.4)]),
         w=Curve([(0, 0.1), (9.6, -0.2), (10.7, 0.2), (16.2, 0.4), (16.6, -0.1), (19.2, 0.2),
@@ -235,14 +235,30 @@ def foot(side, t):
 BREATH_PERIOD = 2.6
 
 
-def channels(t):
+C["walkw"] = Curve([(0, 0), (10.0, 0), (10.3, 1), (14.4, 1), (14.8, 0), (25.3, 0), (25.55, 1),
+                     (27.3, 1), (27.6, 0), (30, 0)])
+# spring stiffness multiplier: snappier secondary motion during hits
+C["stiff"] = Curve([(0, 1), (15.9, 1), (16.2, 2.4), (16.9, 2.4), (17.3, 1), (20.7, 1), (20.95, 3.6),
+                    (21.7, 3.6), (22.1, 1), (22.8, 1), (23.0, 3.6), (23.6, 3.6), (23.9, 1), (30, 1)])
+
+
+def raw_channels(t):
     ch = {k: c(t) for k, c in C.items()}
     br = math.sin(2 * PI * t / BREATH_PERIOD) * ch["breath_amp"]
     ch["breath"] = br
     _, bn, _ = foot("n", t)
     _, bf, _ = foot("f", t)
     ch["swing_n"], ch["swing_f"] = bn, bf
-    ch["root_y"] += -5.0 * (bn + bf) - 1.2 * br
+    # walking: the pelvis is carried by the feet (surges on each step, no skating)
+    tn, _, _ = foot("n", t)
+    tf, _, _ = foot("f", t)
+    ww = ch["walkw"]
+    mid = 0.5 * (tn[0] + tf[0]) - 0.5 * (FOOT_REST["n"] + FOOT_REST["f"])
+    ch["root_x"] = ch["root_x"] * (1 - ww) + mid * ww
+    # weight: hip rises over the passing leg, drops into each plant
+    ch["root_y"] += -8.0 * (bn + bf) - 1.2 * br
+    ch["lean"] += 0.06 * (bn + bf) * ww
+    ch["head"] -= 0.05 * (bn + bf) * ww          # head stabilises against the bob
     ch["curl"] += 0.012 * br
     ch["heart"] = min(1.0, max(0.0, ch["heart"] + 0.05 * br))
     ch["head"] += sum(a * bump(t, t0, d) for t0, d, a in TWITCHES)
@@ -259,6 +275,70 @@ def channels(t):
             sx += env * (math.sin(2 * PI * 7.3 * t + 1.0) + 0.6 * math.sin(2 * PI * 11.1 * t + 2.0))
             sy += env * (math.sin(2 * PI * 6.1 * t + 3.0) + 0.6 * math.sin(2 * PI * 9.7 * t + 4.0))
     ch["shake_x"], ch["shake_y"] = sx, sy
+    return ch
+
+
+# --------------------------------------------------------------------------
+# Secondary motion: damped springs follow the keyed channels, giving overlap,
+# drag and follow-through (head trails the spine, elbows trail shoulders,
+# fingers trail hands). Solved once at a high rate, then sampled.
+# --------------------------------------------------------------------------
+SPRINGS = {  # channel: (natural frequency Hz, damping ratio)
+    "root_x": (3.2, 0.85), "root_y": (3.6, 0.8), "lean": (2.8, 0.7), "curl": (2.6, 0.7),
+    "neck": (2.4, 0.55), "head": (2.1, 0.48),
+    "n_a": (3.0, 0.55), "f_a": (2.8, 0.55), "n_e": (2.6, 0.45), "f_e": (2.5, 0.45),
+    "n_w": (2.4, 0.42), "f_w": (2.4, 0.42), "n_c": (3.0, 0.5), "f_c": (3.0, 0.5),
+    "n_s": (2.6, 0.6), "f_s": (2.6, 0.6), "jaw": (5.0, 0.6),
+}
+SPRING_HZ = 480
+_T0, _T1 = -2.0, 32.0
+
+
+def _solve_springs():
+    ts = np.arange(_T0, _T1, 1.0 / SPRING_HZ)
+    keys = list(SPRINGS)
+    raw = np.array([[raw_channels(t)[k] for k in keys] for t in ts])
+    stiff = np.array([C["stiff"](t) for t in ts])
+    out = np.zeros_like(raw)
+    x = raw[0].copy()
+    vel = np.zeros(len(keys))
+    f = np.array([SPRINGS[k][0] for k in keys])
+    z = np.array([SPRINGS[k][1] for k in keys])
+    dt = 1.0 / SPRING_HZ
+    for i in range(len(ts)):
+        w = 2 * PI * f * stiff[i]
+        acc = w * w * (raw[i] - x) - 2 * z * w * vel
+        vel += acc * dt
+        x = x + vel * dt
+        out[i] = x
+    return ts, keys, out
+
+
+_SPR = None
+
+
+def channels(t):
+    global _SPR
+    if _SPR is None:
+        import hashlib, os
+        src = open(os.path.abspath(__file__), "rb").read()
+        key = hashlib.md5(src).hexdigest()[:12]
+        cache = os.path.join(os.path.dirname(RIG_FILE), f"springs_{key}.npz")
+        if os.path.exists(cache):
+            z = np.load(cache)
+            _SPR = (z["ts"], list(z["keys"]), z["out"])
+        else:
+            _SPR = _solve_springs()
+            os.makedirs(os.path.dirname(cache), exist_ok=True)
+            np.savez(cache, ts=_SPR[0], keys=np.array(_SPR[1]), out=_SPR[2])
+    ts, keys, out = _SPR
+    ch = raw_channels(t)
+    u = (t - _T0) * SPRING_HZ
+    i = int(min(max(math.floor(u), 0), len(ts) - 2))
+    fr = min(max(u - i, 0.0), 1.0)
+    for j, k in enumerate(keys):
+        ch[k] = float(out[i, j] * (1 - fr) + out[i + 1, j] * fr)
+    ch["jaw"] = max(0.0, ch["jaw"])
     return ch
 
 
@@ -355,6 +435,8 @@ def build(t):
         J[f"{side}_sh"], J[f"{side}_el"], J[f"{side}_wr"], J[f"{side}_kn"] = S, el, wr, kn
         for k, fp in enumerate(fingers):
             J[f"{side}_f{k}_tip"] = fp[-1]
+            for i in range(1, len(fp) - 1):
+                J[f"{side}_f{k}_{i}"] = fp[i]
     J["n_hand_tip"] = arms["n"]["fingers"][1][-1]
 
     # legs
@@ -368,6 +450,7 @@ def build(t):
         legs[side] = dict(hip=hipj, knee=knee, ankle=ank2, toe=toe, reach=reach,
                           planted=planted, ma=ma)
         J[f"{side}_hipj"], J[f"{side}_knee"], J[f"{side}_ankle"], J[f"{side}_toe"] = hipj, knee, ank2, toe
+        ch[f"{side}_ma"] = ma
 
     # heart sits in the ribcage, toward the front
     heart = sp[2] * 0.45 + sp[3] * 0.55 - bn_chest * 8.0
@@ -383,6 +466,7 @@ def build(t):
         bn = back_n(dirs[i])
         width = 14 + 10 * s
         attach.append(pt + bn * width + (v(chest_dir, 8) if s == 1.0 else 0))
+    ch["head_dir"], ch["chest_dir"] = hd, chest_dir
     return dict(t=t, ch=ch, J=J, spine=sp, dirs=dirs, neck=[sp[-1], n1, n2], head_dir=hd,
                 arms=arms, legs=legs, attach=np.array(attach), chest_dir=chest_dir)
 
@@ -462,47 +546,113 @@ class Cloak:
         self.pos[:, 0] = attach
 
 
+def horn_lag(t):
+    a0 = head_abs(channels(t))
+    a1 = head_abs(channels(t - 0.1))
+    return max(-0.22, min(0.22, wrap(a1 - a0) * 0.6))
+
+
+def gauss_smooth(x, sigma):
+    r = int(3 * sigma)
+    k = np.exp(-0.5 * (np.arange(-r, r + 1) / sigma) ** 2)
+    k /= k.sum()
+    xp = np.pad(x, (r, r), mode="edge")
+    return np.convolve(xp, k, mode="valid")
+
+
+def frame_camera(joints, names, cloak, mask):
+    """Staging: start from the keyed camera, then clamp/zoom so the whole creature
+    (incl. horn crown and cloak) stays inside the letterboxed safe area."""
+    from config import W, H, LETTERBOX
+    idx = {n: i for i, n in enumerate(names)}
+    n = len(joints)
+    cx = np.array([C["cam_x"](f / FPS) for f in range(n)])
+    cy = np.array([C["cam_y"](f / FPS) for f in range(n)])
+    zk = np.array([C["zoom"](f / FPS) for f in range(n)])
+    lo = np.zeros((n, 2)); hi = np.zeros((n, 2))
+    for f in range(n):
+        P = [joints[f]]
+        P.append(cloak[f][mask])
+        h = joints[f, idx["neck2"]]
+        P.append(np.array([h + [-120, -125], h + [120, -125], h + [0, 40]]))  # horn crown reach
+        P.append(np.array([[joints[f, :, 0].min(), GROUND + 20], [joints[f, :, 0].max(), GROUND + 20]]))
+        A = np.concatenate(P)
+        lo[f], hi[f] = A.min(0), A.max(0)
+    mx, my = 70.0, 34.0                            # screen margins (px) inside letterbox
+    hw, hh = W / 2 - mx, H / 2 - LETTERBOX - my
+    zfit = np.minimum(2 * hw / (hi[:, 0] - lo[:, 0]), 2 * hh / (hi[:, 1] - lo[:, 1]))
+    z = np.minimum(zk, zfit)
+    # zoom out early and come back slowly: windowed minimum, then smooth
+    zmin = np.array([z[max(0, f - 14):f + 15].min() for f in range(n)])
+    z = np.minimum(gauss_smooth(zmin, 6), z)
+    for _ in range(2):
+        cxc = np.clip(cx, hi[:, 0] - hw / z, lo[:, 0] + hw / z)
+        cyc = np.clip(cy, hi[:, 1] - hh / z, lo[:, 1] + hh / z)
+        cx, cy = gauss_smooth(cxc, 5), gauss_smooth(cyc, 5)
+    cx = np.clip(cx, hi[:, 0] - hw / z, lo[:, 0] + hw / z)
+    cy = np.clip(cy, hi[:, 1] - hh / z, lo[:, 1] + hh / z)
+    return cx, cy, z
+
+
+SUB = 4   # exported samples per frame (motion-blur subframes)
+
+
 def solve(path=RIG_FILE, verbose=True):
-    names = sorted(build(0.0)["J"].keys())
-    joints = np.zeros((NFRAMES, len(names), 2))
-    cloak = np.zeros((NFRAMES, NCH, PMAX, 2))
+    import json, os
+    r0 = build(0.0)
+    names = sorted(r0["J"].keys())
+    NS = NFRAMES * SUB
+    js = np.zeros((NS, len(names), 2))
+    cls = np.zeros((NS, NCH, PMAX, 2))
+    sk = ["heart", "eyes", "jaw", "breath", "shake_x", "shake_y", "fog_front", "title",
+          "head_dir", "chest_dir", "n_ma", "f_ma"]
+    sc = np.zeros((NS, len(sk) + 1))
     reach = np.zeros((NFRAMES, 4))
     planted = np.zeros((NFRAMES, 2), bool)
-    scal_keys = ["heart", "eyes", "jaw", "zoom", "shake_x", "shake_y", "fog_front"]
-    scal = np.zeros((NFRAMES, len(scal_keys)))
-    dt = 1.0 / FPS
-    r0 = build(0.0)
+    dt = 1.0 / (FPS * SUB)
     cl = Cloak(r0["attach"])
-    for _ in range(int(3.0 * FPS * SUBSTEPS)):       # pre-roll so frame 0 is settled
-        cl.step(r0["attach"], 0.0, dt / SUBSTEPS)
-    prev_attach = r0["attach"]
-    for f in range(NFRAMES):
-        t = f * dt
+    for _ in range(int(3.0 * FPS * SUBSTEPS)):
+        cl.step(r0["attach"], 0.0, 1.0 / FPS / SUBSTEPS)
+    prev = r0["attach"]
+    for s_ in range(NS):
+        t = s_ * dt
         r = build(t)
-        for s in range(SUBSTEPS):
-            u = (s + 1) / SUBSTEPS
-            if f > 0:
-                a = prev_attach * (1 - u) + r["attach"] * u
-                ts = t - dt + u * dt
-            else:
-                a, ts = r["attach"], t
-            cl.step(a, ts, dt / SUBSTEPS)
-        prev_attach = r["attach"]
-        cloak[f] = cl.pos
-        joints[f] = [r["J"][n] for n in names]
-        reach[f] = [r["arms"]["n"]["reach"] if r["ch"]["n_ik"] > 0 else 0,
-                    r["arms"]["f"]["reach"] if r["ch"]["f_ik"] > 0 else 0,
-                    r["legs"]["n"]["reach"], r["legs"]["f"]["reach"]]
-        planted[f] = [r["legs"]["n"]["planted"], r["legs"]["f"]["planted"]]
-        scal[f] = [r["ch"][k] for k in scal_keys]
+        a = r["attach"]
+        cl.step(prev * 0 + a if s_ == 0 else a, t, dt)
+        prev = a
+        js[s_] = [r["J"][n] for n in names]
+        cls[s_] = cl.pos
+        sc[s_] = [r["ch"][k] for k in sk] + [horn_lag(t)]
+        if s_ % SUB == 0:
+            f = s_ // SUB
+            reach[f] = [r["arms"]["n"]["reach"] if r["ch"]["n_ik"] > 0 else 0,
+                        r["arms"]["f"]["reach"] if r["ch"]["f_ik"] > 0 else 0,
+                        r["legs"]["n"]["reach"], r["legs"]["f"]["reach"]]
+            planted[f] = [r["legs"]["n"]["planted"], r["legs"]["f"]["planted"]]
+    joints, cloak = js[::SUB], cls[::SUB]
+    cx, cy, z = frame_camera(joints, names, cloak, Cloak(r0["attach"]).mask)
+    tf = np.arange(NFRAMES) / FPS
+    ts = np.arange(NS) * dt
+    cam = np.stack([np.interp(ts, tf, cx), np.interp(ts, tf, cy), np.interp(ts, tf, z)], 1)
+    scal = np.concatenate([sc[::SUB], cam[::SUB]], 1)
+    scal_keys = sk + ["horn_lag", "cam_x", "cam_y", "zoom"]
+    mask = Cloak(r0["attach"]).mask
     np.savez_compressed(path, names=np.array(names), joints=joints, cloak=cloak,
-                        cloak_mask=cl.mask, reach=reach, planted=planted,
+                        cloak_mask=mask, reach=reach, planted=planted,
                         scal=scal, scal_keys=np.array(scal_keys), fps=FPS,
                         seg_l=np.array(SEG_L), chain_len=np.array(CHAIN_LEN))
+    # binary export for the three.js renderer
+    out = os.path.dirname(path)
+    allsc = np.concatenate([sc, cam], 1).astype(np.float32)
+    jbin = np.concatenate([js.reshape(NS, -1), cls.reshape(NS, -1), allsc], 1).astype(np.float32)
+    jbin.tofile(os.path.join(out, "anim.bin"))
+    meta = dict(names=names, n_samples=NS, sub=SUB, fps=FPS, ground=GROUND, nframes=NFRAMES,
+                nch=NCH, pmax=PMAX, chain_len=CHAIN_LEN, scal=scal_keys,
+                stride=int(jbin.shape[1]), nj=len(names))
+    json.dump(meta, open(os.path.join(out, "anim.json"), "w"))
     if verbose:
-        print(f"solved {NFRAMES} frames -> {path}")
+        print(f"solved {NFRAMES} frames x {SUB} subframes -> {path}, anim.bin")
     return path
-
 
 if __name__ == "__main__":
     import os

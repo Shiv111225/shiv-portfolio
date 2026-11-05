@@ -14,13 +14,12 @@ import time
 from config import FPS, NFRAMES, NSEG, QC_DIR, VIDEO, FRAMES_DIR
 import anim
 import qc
-import render
 
 
 def encode():
     cmd = ["ffmpeg", "-v", "error", "-y", "-framerate", str(FPS), "-i", os.path.join(FRAMES_DIR, "%05d.png"),
            "-frames:v", str(NFRAMES), "-c:v", "libx264", "-preset", "slow", "-crf", "16",
-           "-pix_fmt", "yuv420p", "-movflags", "+faststart", VIDEO]
+           "-pix_fmt", "yuv420p", "-tune", "grain", "-movflags", "+faststart", VIDEO]
     subprocess.run(cmd, check=True)
 
 
@@ -56,7 +55,8 @@ def main():
     for s in range(NSEG):
         if s >= a.from_seg:
             ts = time.time()
-            render.render_frames(list(range(s * 120, (s + 1) * 120)))
+            subprocess.run(["node", os.path.join(os.path.dirname(os.path.abspath(__file__)), "r3d", "render3d.js"),
+                            "--frames", f"{s * 120}-{(s + 1) * 120 - 1}", "--workers", "3"], check=True)
             print(f"rendered segment {s} in {time.time() - ts:.1f}s")
         # QC the previous segment again too, now that its right-hand seam frame exists
         for q in ([s - 1] if s > 0 else []) + [s]:
