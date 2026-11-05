@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shiv — Portfolio</title>
+  <meta name="description" content="Shiv's 3D portfolio — living symbiote matter meets kinetic vibranium energy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="loader"><div class="pulse"></div><span>BONDING…</span></div>
+
+  <canvas id="scene"></canvas>
+  <div class="grain"></div>
+
+  <nav class="nav">
+    <a href="#hero" class="logo">SHIV<span>.</span></a>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#projects">Work</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <section id="hero" class="panel hero">
+      <p class="eyebrow">// host acquired</p>
+      <h1 class="glitch" data-text="SHIV">SHIV</h1>
+      <p class="tagline">Developer &middot; Designer &middot; Builder of living interfaces</p>
+      <a href="#projects" class="btn">Enter the hive</a>
+      <div class="scroll-hint"><span></span>scroll</div>
+    </section>
+
+    <section id="about" class="panel">
+      <div class="card reveal">
+        <p class="eyebrow">01 — origin</p>
+        <h2>About</h2>
+        <p>
+          I'm Shiv — I build things for the web that feel alive. I like the space where
+          clean engineering meets bold visuals: fast, accessible front ends wrapped in
+          motion, 3D and a bit of attitude.
+        </p>
+        <p class="muted">Edit this text in <code>index.html</code> to tell your own story.</p>
+      </div>
+    </section>
+
+    <section id="skills" class="panel">
+      <div class="card reveal wide">
+        <p class="eyebrow">02 — abilities</p>
+        <h2>Skills</h2>
+        <div class="skills">
+          <div class="skill"><span>JavaScript / TypeScript</span><i style="--v:90%"></i></div>
+          <div class="skill"><span>React / Next.js</span><i style="--v:85%"></i></div>
+          <div class="skill"><span>Three.js / WebGL</span><i style="--v:75%"></i></div>
+          <div class="skill"><span>Node.js / APIs</span><i style="--v:80%"></i></div>
+          <div class="skill"><span>UI / Motion Design</span><i style="--v:85%"></i></div>
+          <div class="skill"><span>Python</span><i style="--v:70%"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="panel">
+      <div class="reveal wide">
+        <p class="eyebrow">03 — missions</p>
+        <h2>Selected work</h2>
+        <div class="projects">
+          <article class="project">
+            <div class="vein"></div>
+            <h3>Project One</h3>
+            <p>A short description of what you built, the problem it solved and the stack you used.</p>
+            <ul class="tags"><li>React</li><li>Node</li></ul>
+            <a href="#" class="link">View &rarr;</a>
+          </article>
+          <article class="project">
+            <div class="vein"></div>
+            <h3>Project Two</h3>
+            <p>A short description of what you built, the problem it solved and the stack you used.</p>
+            <ul class="tags"><li>Three.js</li><li>GLSL</li></ul>
+            <a href="#" class="link">View &rarr;</a>
+          </article>
+          <article class="project">
+            <div class="vein"></div>
+            <h3>Project Three</h3>
+            <p>A short description of what you built, the problem it solved and the stack you used.</p>
+            <ul class="tags"><li>Python</li><li>ML</li></ul>
+            <a href="#" class="link">View &rarr;</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="panel">
+      <div class="card reveal">
+        <p class="eyebrow">04 — transmission</p>
+        <h2>Let's bond</h2>
+        <p>Open to freelance work, collaborations and full-time roles.</p>
+        <div class="socials">
+          <a href="https://github.com/Shiv111225" target="_blank" rel="noopener" class="btn">GitHub</a>
+          <a href="#" class="btn ghost">LinkedIn</a>
+          <a href="#" class="btn ghost">Email</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>&copy; <span id="year"></span> Shiv &middot; crafted in the dark</footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
