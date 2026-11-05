@@ -879,6 +879,7 @@ if(sc && window.THREE){
   const $ = (sel, root=document) => [...root.querySelectorAll(sel)], txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : '';
   const pick = a => a[Math.floor(Math.random()*a.length)];
   const EMAIL = txt(document.getElementById('mail')) || 'shivwork111@gmail.com';
+  const clipKey = t => { let h = 0x811c9dc5; const n = t.toLowerCase().replace(/[^a-z0-9]+/g, ''); for(let i = 0; i < n.length; i++){ h ^= n.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(36); };
   const sayEmail = t => t.replace(EMAIL, EMAIL.replace(/@/, ' at ').replace(/\./g, ' dot ').replace(/(\d)/g, ' $1'));
 
   /* ---- 1. read the page into snippets: every project, study, skill, award, plus about and contact ---- */
@@ -939,17 +940,15 @@ if(sc && window.THREE){
     let body = keep.join(' ');
     const sents2 = askTools ? keep.map(x => x.replace(/^Tags:/, 'Made with and tagged:')) : keep.filter(x => !/^Tags:/.test(x)); if(sents2.length) body = sents2.join(' ');
     if(/\b(I|I'm|my|me)\b/.test(body) && !/^In his words/.test(body)) body = 'In his words: “' + body + '”';
-    let lead = '';
-    if(d.kind === 'project'){ const m = (d.meta || '').match(/^(\d{4})\s*·\s*(.+)$/);
-      const end = m || !/[.?!]$/.test(d.title) ? '.' : '';
-      lead = d.title + (m ? ' (' + m[1] + ', ' + m[2].toLowerCase().replace(/^ar /, 'AR ') + ')' : '') + end + ' '; }
+    const lead = leadOf(d);
     return { text: lead + body, go: d.id, kind: d.kind === 'project' && d.id === 'threed' ? (/panther/i.test(d.title) ? 'model' : 'render') : d.kind, score: skillScore(d) };
   }
 
   /* ---- humour: facts come straight from the page; a joke rides on every answer ---- */
   const BAGS = {};
   /* draw from a shuffled bag so the same line never repeats until the bag is empty */
-  function draw(key, pool){ if(!pool || !pool.length) return '';
+  const POOLS = {};
+  function draw(key, pool){ if(!pool || !pool.length) return ''; POOLS[key] = pool;
     if(!BAGS[key] || !BAGS[key].length){ const b = [...pool].sort(() => Math.random() - .5); if(BAGS[key + '#last'] && b.length > 1 && b[b.length - 1] === BAGS[key + '#last']) b.unshift(b.pop()); BAGS[key] = b; }
     const v = BAGS[key].pop(); BAGS[key + '#last'] = v; return v; }
   const QUIPS = {
@@ -967,6 +966,7 @@ if(sc && window.THREE){
     ai: ["Yes, we're aware of the irony.", "He uses AI. We are the AI. It's a whole ecosystem.", "Somewhere in that pipeline, a robot is very proud of him."],
     bonus: ["Fun fact: we know this because we live here.", "We read that part of the page with great intensity. And no eyes.", "Write that down. Or don't. We'll remember. We remember everything on this page."]
   };
+  const GREET = "We are the symbiote. We've read every page of Shiv. Twice. Ask us anything about him, or ask for a joke. Type, or tap the mic.";
   const SUGGEST = " Try asking what he's made, what he's best at, or what he's aiming for.";
   const DODGE = {
     huh: ["We didn't catch that. Our ears are mostly goo.", "Sorry, that went straight through us. Literally. We're semi-transparent.", "We blinked. We don't have eyelids, but we blinked. Say that again?", "That's either a question or a sneeze. Bless you, either way."],
@@ -993,6 +993,9 @@ if(sc && window.THREE){
   const S = (...v) => v; // a set of 2 or 3 ways to say the same true thing
   let TOOLSV = [];
 
+  function leadOf(d){ if(d.kind !== 'project') return ''; const m = (d.meta || '').match(/^(\d{4})\s*·\s*(.+)$/);
+    const end = m || !/[.?!]$/.test(d.title) ? '.' : '';
+    return d.title + (m ? ' (' + m[1] + ', ' + m[2].toLowerCase().replace(/^ar /, 'AR ') + ')' : '') + end + ' '; }
   /* ---- 3. what it should always handle itself: each one has several answers, all true, all with a joke ---- */
   const sk = n => { const k = (typeof SK !== 'undefined' ? SK : []).find(x => x[1].toLowerCase() === n.toLowerCase()); return k ? k[2] : '?'; };
   const INTENTS = [
@@ -1206,6 +1209,18 @@ if(sc && window.THREE){
     return rep;
   }
   window.__symAsk = q => answer(q); // for testing in the console
+  window.__symLines = () => {
+    const all = new Set(), add = t => { if(t) all.add(t); };
+    INTENTS.forEach(it => { (it.v || []).forEach(add);
+      if(it.r && !['more','another'].includes(it.id)) ['', 'roast me', 'roast shiv', 'python', 'java', 'games', 'hobbies', 'what tools for 3d', 'video edit', 'motion graphics', 'image editing', 'ui design', 'vector logo', 'vr', 'software'].forEach(q => { try { const r = it.r(q); r && add(r.text); } catch(_){} }); });
+    Object.values(POOLS).forEach(p => p.forEach(add));
+    Object.values(QUIPS).forEach(p => p.forEach(add)); JOKES.forEach(add); Object.values(DODGE).forEach(p => p.forEach(add)); add(SUGGEST); add(GREET);
+    docs.forEach(d => { add(leadOf(d)); d.text.split(/(?<=[.!?])\s+/).forEach(x => { add(x); add(x.replace(/^Tags:/, 'Made with and tagged:')); }); });
+    add('In his words:');
+    const frags = new Map();
+    all.forEach(t => sayEmail(t).split(/(?<=[.!?;:])\s+/).map(x => x.trim()).filter(x => /[a-z0-9]/i.test(x)).forEach(x => frags.set(clipKey(x), x)));
+    return [...frags].map(([key, text]) => ({ key, text }));
+  };
 
   /* ---- 4. voice: deep and slow; spoken a sentence at a time so long answers never stall ---- */
   let voice = null;
@@ -1216,10 +1231,45 @@ if(sc && window.THREE){
   let mouth = 0, guard = 0, speakId = 0;
   function setMode(m){ SYM.mode = m; mic.setAttribute('aria-pressed', m === 'listening' ? 'true' : 'false');
     talkBtn && talkBtn.setAttribute('aria-pressed', m === 'listening' ? 'true' : 'false'); }
-  function stopSpeaking(){ speakId++; clearInterval(mouth); clearTimeout(guard); if(TTS) TTS.cancel(); duck(false); if(SYM.mode === 'speaking') setMode('idle'); }
+  /* recorded symbiote voice (voice/<key>.mp3, listed in voice/index.json). Same voice on every device */
+  let VOICE = null, curSrc = null, mouthRaf = 0;
+  const clipCache = new Map();
+  function loadVoice(){ if(VOICE !== null) return; VOICE = false;
+    fetch('voice/index.json').then(r => r.ok ? r.json() : null).then(j => { VOICE = Array.isArray(j) ? new Set(j) : false; }).catch(() => {}); }
+  function clip(key){
+    if(!clipCache.has(key)) clipCache.set(key, fetch('voice/' + key + '.mp3').then(r => { if(!r.ok) throw new Error('clip'); return r.arrayBuffer(); })
+      .then(b => new Promise((res, rej) => ctx.decodeAudioData(b, res, rej))).catch(e => { clipCache.delete(key); throw e; }));
+    return clipCache.get(key); }
+  function playClips(parts, id){
+    setMode('speaking'); duck(true);
+    const bufs = parts.map(p => clip(clipKey(p)));
+    const an = ctx.createAnalyser(); an.fftSize = 512; const data = new Uint8Array(an.fftSize), o = out(.95, .08); an.connect(o);
+    const lip = () => { if(id !== speakId) return; an.getByteTimeDomainData(data); let sum = 0; for(let i = 0; i < data.length; i++){ const v = (data[i] - 128)/128; sum += v*v; }
+      SYM.speak = Math.min(1, Math.sqrt(sum/data.length)*5); mouthRaf = requestAnimationFrame(lip); };
+    lip();
+    const done = () => { cancelAnimationFrame(mouthRaf); curSrc = null; if(id === speakId){ duck(false); setMode('idle'); } };
+    const next = i => {
+      if(id !== speakId) return;
+      if(i >= parts.length) return done();
+      bufs[i].then(buf => {
+        if(id !== speakId) return;
+        const src = ctx.createBufferSource(); src.buffer = buf; src.connect(an); curSrc = src;
+        src.onended = () => setTimeout(() => next(i + 1), 70);
+        src.start();
+      }).catch(() => { done(); speakDevice(parts.slice(i).join(' ')); }); // a clip failed: say the rest with the device voice
+    };
+    next(0);
+  }
+  function stopSpeaking(){ speakId++; clearInterval(mouth); clearTimeout(guard); cancelAnimationFrame(mouthRaf); if(curSrc){ try{ curSrc.stop(); }catch(_){} curSrc = null; } if(TTS) TTS.cancel(); duck(false); if(SYM.mode === 'speaking') setMode('idle'); }
   function speak(text){
-    if(!soundOn || !TTS){ setMode('idle'); return; }
+    if(!soundOn){ setMode('idle'); return; }
     stopSpeaking();
+    const parts = text.split(/(?<=[.!?;:])\s+/).map(x => x.trim()).filter(x => /[a-z0-9]/i.test(x));
+    if(VOICE && ac() && parts.length && parts.every(p => VOICE.has(clipKey(p)))) return playClips(parts, ++speakId);
+    speakDevice(text);
+  }
+  function speakDevice(text){
+    if(!TTS){ setMode('idle'); return; }
     const id = ++speakId, parts = text.split(/(?<=[.!?;:])\s+/).map(x => x.trim()).filter(Boolean);
     setMode('speaking'); duck(true);
     mouth = setInterval(() => { SYM.speak = Math.max(SYM.speak, .35 + Math.random()*.6); }, 130);
@@ -1256,8 +1306,9 @@ if(sc && window.THREE){
   }
   let greeted = false;
   function open(listenNow){
+    loadVoice();
     if(panel.hidden){ panel.hidden = false; SYM.docked = true; bubble(0, 1); bubble(.08, .7);
-      if(!greeted){ greeted = true; line('sp-it', "We are the symbiote. We've read every page of Shiv. Twice. Ask us anything about him, or ask for a joke. Type, or tap the mic." + (soundOn ? '' : ' (Sound is off, so we answer in text.)')); } }
+      if(!greeted){ greeted = true; line('sp-it', GREET + (soundOn ? '' : ' (Sound is off, so we answer in text.)')); } }
     if(listenNow) listen(); else if(matchMedia('(pointer:fine)').matches) setTimeout(() => qIn.focus(), 60);
   }
   function close(){ panel.hidden = true; SYM.docked = false; stopSpeaking(); if(SYM.mode === 'listening'){ try{ rec && rec.stop(); }catch(_){} } setMode('idle'); }
