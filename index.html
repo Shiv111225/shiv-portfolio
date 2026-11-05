@@ -54,6 +54,27 @@ p{margin:0;color:#cfcac2;max-width:62ch}
 .mus[aria-pressed="true"] .eq s{background:var(--red);animation:eq .9s ease-in-out infinite}
 .mus[aria-pressed="true"] .eq s:nth-child(2){animation-delay:-.3s}.mus[aria-pressed="true"] .eq s:nth-child(3){animation-delay:-.6s}.mus[aria-pressed="true"] .eq s:nth-child(4){animation-delay:-.15s}
 @keyframes eq{0%,100%{height:3px}50%{height:11px}}
+/* talk to the symbiote */
+[hidden]{display:none!important}
+.sym-talk{display:flex;gap:12px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.talk{display:inline-flex;gap:10px;align-items:center;font:500 14px var(--f-body);color:var(--bone);background:rgba(17,17,20,.72);border:1px solid var(--line);border-radius:99px;padding:9px 16px 9px 12px;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:border-color .2s}
+.talk svg{width:17px;height:17px;color:var(--red)}
+.talk:hover,.talk:focus-visible{border-color:var(--red)}
+.talk[aria-pressed="true"]{border-color:var(--red);animation:listen 1.2s infinite}
+@keyframes listen{0%{box-shadow:0 0 0 0 rgba(184,20,28,.6)}70%{box-shadow:0 0 0 12px rgba(184,20,28,0)}100%{box-shadow:0 0 0 0 rgba(184,20,28,0)}}
+.typeit{background:none;border:0;color:var(--mute);font:400 13px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px}
+.typeit:hover{color:var(--bone)}
+.sym-type{display:flex;gap:8px;margin-top:12px;max-width:46ch}
+.sym-type input{flex:1;min-width:0;background:rgba(17,17,20,.85);border:1px solid var(--line);border-radius:99px;color:var(--bone);font:400 14px var(--f-body);padding:10px 15px}
+.sym-type input:focus{outline:none;border-color:var(--red)}
+.sym-type button{font:500 14px var(--f-body);color:var(--bone);background:var(--ox);border:1px solid var(--red);border-radius:99px;padding:9px 16px;cursor:pointer}
+.sym-say{margin-top:14px;max-width:46ch;padding:14px 16px;border-radius:16px;background:rgba(8,8,10,.82);border:1px solid var(--line);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-size:14px;line-height:1.55}
+.hero .sym-say p{font-size:14px;max-width:none}
+.sy-you{color:var(--mute);margin:0 0 8px;font-style:italic}
+.sy-you:empty{display:none}
+.sy-it{margin:0;color:var(--bone)}
+.sy-it::before{content:"symbiote";display:block;font:500 10px/1 var(--f-mono);letter-spacing:.22em;text-transform:uppercase;color:var(--red);margin-bottom:7px}
+@media (prefers-reduced-motion:reduce){.talk[aria-pressed="true"]{animation:none;box-shadow:0 0 0 2px var(--red)}}
 @media (prefers-reduced-motion:reduce){.mus[aria-pressed="true"] .eq s{animation:none;height:8px}}
 @media (max-width:400px){.links{gap:8px}.snd{padding:7px 11px;font-size:12px}}
 @media (max-width:720px){.links a{display:none}}
@@ -225,6 +246,12 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
       <a class="gbtn red" href="#work"><span class="body"><span class="pill"></span><span class="drip"></span><span class="drip"></span><span class="drip"></span><span class="drip"></span></span><span class="shine"></span><span class="lbl">View the work →</span></a>
       <a class="ghost" href="#skills">Play the skills keyboard</a>
     </div>
+    <div class="sym-talk">
+      <button class="talk" id="talk" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="talk-lbl">Talk to the symbiote</span></button>
+      <button class="typeit" id="typeit" type="button">or type</button>
+    </div>
+    <form class="sym-type" id="symtype" hidden><input id="symq" type="text" placeholder="Ask about Shiv's work, skills, contact…" autocomplete="off" aria-label="Ask the symbiote"><button type="submit">Ask</button></form>
+    <div class="sym-say" id="symsay" hidden aria-live="polite"><p class="sy-you" id="symyou"></p><p class="sy-it" id="symit"></p></div>
   </div>
 </header>
 
@@ -674,6 +701,8 @@ if(window.THREE && THREE.MarchingCubes){
   function loop(){ if(!active) return; const t=(performance.now()-t0)/1000; frame(t); if(!RM) requestAnimationFrame(loop); }
   loop();
 }
+/* shared with the voice assistant below: what the mass is doing, and a hit test for taps on it */
+const SYM = { mode: 'idle', speak: 0, hit: () => false };
 /* ---------------- 3D symbiote (living liquid mass, reaches for the cursor) ---------------- */
 const sc = document.getElementById('sym3d');
 if(sc && window.THREE){
@@ -754,6 +783,10 @@ if(sc && window.THREE){
   const small = innerWidth < 720;
   const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(1, small ? 40 : 80), mat); S.add(blob);
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3(), sph = new THREE.Sphere(new THREE.Vector3(), 1.3);
+  const hero = document.querySelector('.hero'); let hovering = false;
+  SYM.hit = (x, y) => { if(!active) return false; const r = sc.getBoundingClientRect();
+    const v = new THREE.Vector2(((x - r.left)/r.width)*2 - 1, -((y - r.top)/r.height)*2 + 1), rc = new THREE.Raycaster();
+    rc.setFromCamera(v, C); return !!rc.ray.intersectSphere(sph, new THREE.Vector3()); };
   let touching = false, target = new THREE.Vector2(), agit = 0, active = true, last = performance.now(), home = new THREE.Vector3();
   function size(){ const w = sc.clientWidth, h = sc.clientHeight; if(!w||!h) return; R.setSize(w, h, false); C.aspect = w/h; C.updateProjectionMatrix();
     // world-space viewport size at z=0, used to place the mass between the name and the panther's head
@@ -773,10 +806,15 @@ if(sc && window.THREE){
     if(!active) return;
     const now = performance.now(), dt = Math.min(.05, (now - last)/1000); last = now;
     U.uTime.value += dt*(RM ? .2 : 1);
-    agit *= .95; U.uAgit.value += (agit - U.uAgit.value)*.1;
+    agit *= .95;
+    if(SYM.mode === 'listening') agit = Math.max(agit, .35 + .25*Math.sin(U.uTime.value*6));   // ripples while it listens
+    else if(SYM.mode === 'thinking') agit = Math.max(agit, .5);
+    else if(SYM.mode === 'speaking'){ SYM.speak *= .88; agit = Math.max(agit, .2 + SYM.speak*.8); } // veins pulse per word
+    U.uAgit.value += (agit - U.uAgit.value)*.1;
     ndc.lerp(target, .08); ray.setFromCamera(ndc, C);
     sph.center.copy(blob.position); sph.radius = 1.3*blob.scale.x;
     touching = !!ray.ray.intersectSphere(sph, hit);
+    if(touching !== hovering){ hovering = touching; hero.style.cursor = touching ? 'pointer' : ''; }
     if(touching){ blob.worldToLocal(hit); U.uMouse.value.lerp(hit, .15); }
     else { ray.ray.closestPointToPoint(blob.position, hit); blob.worldToLocal(hit); U.uMouse.value.lerp(hit.multiplyScalar(3), .05); }
     blob.rotation.y = U.uTime.value*.12 + ndc.x*.4; blob.rotation.x = ndc.y*.3;
@@ -786,6 +824,127 @@ if(sc && window.THREE){
   }
   loop();
 }
+/* ---------------- voice assistant: talk to the symbiote ---------------- */
+(() => {
+  const talkBtn = document.getElementById('talk'), typeBtn = document.getElementById('typeit'), form = document.getElementById('symtype'),
+        qIn = document.getElementById('symq'), box = document.getElementById('symsay'), youEl = document.getElementById('symyou'), itEl = document.getElementById('symit');
+  if(!talkBtn) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition, TTS = window.speechSynthesis;
+  const go = id => setTimeout(() => { const el = document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth'}); }, 900);
+  const EMAIL = 'shivwork111@gmail.com';
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+
+  /* everything it knows comes from this page. text = shown, say = spoken (optional) */
+  const INTENTS = [
+    { k:['hello','hi','hey','yo','sup','namaste','who are you','what are you','your name'], r:() => ({ text: pick([
+        "We are the symbiote. We bonded with Shiv. Ask us about his work, his skills, or how to reach him.",
+        "Hello, little human. We are what lives in this page. Ask us about Shiv's projects, his 3D work or how to contact him."]) }) },
+    { w:.8, k:['who is shiv','about','yourself','himself','student','study','college','nmims','school','education','degree'], r:() => ({ text:
+        "Shiv Shrivastav is an Animation and VFX student at NMIMS School of Design in Mumbai, 2024 to 2028. He's a creative technologist working where immersive media, 3D, motion design and AI meet. He researches before he builds, cares about marketing psychology, and uses AI as a real collaborator." }), go:'about' },
+    { k:['project','projects','work','portfolio','made','built','build','showcase'], r:() => ({ text:
+        "Four recent projects. LOSER, a dialogue-free animated short set to music. Who Made This?, a motion explainer on copyright in India. Apple vs Meta, a 27-section case report on the XR race. And Meta Orion, a 30-second AR explainer. Ask us about any of them." }), go:'work' },
+    { w:2, k:['loser','animated short','short film','film'], r:() => ({ text:
+        "LOSER is a 1 minute 22 animated short set to music, told with no dialogue. A beat-mapped edit at about 86 BPM, a full colour script, and 1,968 rendered frames." }), go:'work' },
+    { w:2, k:['who made this','copyright','meera','remotion','explainer','motion graphics'], r:() => ({ text:
+        "Who Made This? is a two-minute explainer on copyright in India, told through Meera, an illustrator whose art is used without credit. Every character, icon and sound is original, with a 26-page process book." }), go:'work' },
+    { w:2, k:['apple','meta','xr','vision pro','case report','research','spatial'], r:() => ({ text:
+        "Apple vs Meta: The XR Race is a 27-section case report comparing two strategies for spatial computing, and why adoption doesn't simply follow specs." }), go:'work' },
+    { w:2, k:['orion','glasses','ar glasses','augmented'], r:() => ({ text:
+        "Meta Orion is a 30-second explainer on Meta's AR glasses prototype: projectors in the frame, eye and hand tracking, and a wristband that reads finger movement." }), go:'work' },
+    { k:['3d','blender','render','lighting','classroom','golden hour','room','environment'], r:() => ({ text:
+        "In 3D, Shiv builds and lights scenes in Blender. Golden Hour, Empty Classroom is a full classroom lit for low sun. One Room, Four Lights re-lights the same room as morning, sunset, neon night and late night. Switch the views on the page to see them." }), go:'threed' },
+    { w:2, k:['panther','model','sculpture','low poly','faceted'], r:() => ({ text:
+        "The faceted panther was modelled from Shiv's own turnaround sheet, carved from its outlines, then faceted into a low-poly sculpture with glossy black panels and amber eyes. Grab it and spin it." }), go:'threed' },
+    { k:['skill','skills','tools','software','good at','strength','strengths','unity','after effects','premiere','photoshop','figma','maya','illustrator','ai','claude','chatgpt','keyboard'], r:() => ({ text:
+        "His strongest strengths are marketing psychology, people management and analytical thinking. In tools: Blender, After Effects, Premiere Pro and Photoshop, plus Figma, Illustrator, 3ds Max, Maya and Unity. With AI, Claude and ChatGPT. Play the skills keyboard to hear each one." }), go:'skills' },
+    { w:2, k:['certificate','certifications','certified','award','awards','achievement','course','courses','whitehat','java','c++'], r:() => ({ text:
+        "The trail so far: certificate courses in C, C++ and Java from ICIT in 2025. The Mst. Tech-savvy valedictory award in 2024. Certified app and game developer from WhiteHat Jr in 2020. And Clever Harvey's Junior CEO, CTO and CMO programs." }), go:'credentials' },
+    { k:['contact','email','mail','reach','hire','hiring','internship','intern','job','collaborate','work with','linkedin','github','connect'], r:() => ({
+        text: "Shiv is looking for AR/VR and creative technologist internships. Email " + EMAIL + ", or find him on LinkedIn and GitHub. The links are at the bottom.",
+        say:  "Shiv is looking for AR VR and creative technologist internships. Email shiv work 1 1 1 at gmail dot com, or find him on LinkedIn and GitHub. The links are at the bottom." }), go:'contact' },
+    { k:['where','location','live','based','city','mumbai','india'], r:() => ({ text: "Shiv is based in Mumbai, India." }) },
+    { w:2, k:['stop the song','stop music','stop the music','pause','pause music','turn off music','silence the song'], act:() => { if(musicOn) musBtn.click(); }, r:() => ({ text: "The song sleeps. For now." }) },
+    { k:['play','song','music','what did i miss','beat','track'], act:() => { if(!musicOn) musBtn.click(); }, r:() => ({ text: "What Did I Miss? Here it is. It loops for as long as you stay." }) },
+    { k:['venom','spider','marvel','are you evil','hungry','eat'], r:() => ({ text: pick([
+        "We have no name you would know. We hunger only for good design.",
+        "We are not that one. We are Shiv's. We bite only bad interfaces."]) }) },
+    { k:['thank','thanks','cool','nice','awesome','love','great','amazing'], r:() => ({ text: pick(["We are pleased. Stay a while.", "Good. We like you too."]) }) },
+    { k:['bye','goodbye','see you','later','leave'], r:() => ({ text: "We will be here, in the dark. Come back." }) }
+  ];
+  const DODGE = [
+    "We only know Shiv's world. Ask about his projects, 3D work, skills or how to reach him.",
+    "That is beyond our host. Try: what has Shiv made, what are his skills, or how do I contact him.",
+    "We do not know that. We know his work, his tools, the song, and his email."];
+
+  function answer(q){
+    const t = ' ' + q.toLowerCase().replace(/[^a-z0-9+ ]/g, ' ').replace(/\s+/g, ' ') + ' ';
+    let best = null, score = 0;
+    INTENTS.forEach(it => { let sc = 0; it.k.forEach(k => { if(t.includes(' ' + k + ' ')) sc += k.split(' ').length; }); sc *= it.w || 1; if(sc > score){ score = sc; best = it; } }); // specific topics (w:2) beat generic words
+    if(!best) return { text: pick(DODGE) };
+    if(best.act) best.act();
+    if(best.go) go(best.go);
+    return best.r();
+  }
+
+  /* voice: deep and slow. pick a low English voice when the browser has one */
+  let voice = null;
+  function pickVoice(){ if(!TTS) return; const vs = TTS.getVoices().filter(v => /^en/i.test(v.lang)); if(!vs.length) return;
+    voice = vs.find(v => /male|daniel|alex|fred|rishi|george|arthur|guy/i.test(v.name) && !/female/i.test(v.name)) || vs.find(v => /en-(gb|in)/i.test(v.lang)) || vs[0]; }
+  if(TTS){ pickVoice(); TTS.addEventListener && TTS.addEventListener('voiceschanged', pickVoice); }
+
+  const duck = on => { if(mGain && musicOn && ctx) mGain.gain.setTargetAtTime(on ? MUSIC_VOL*.3 : MUSIC_VOL, ctx.currentTime, .2); };
+  let mouth = 0;
+  function setMode(m){ SYM.mode = m; talkBtn.setAttribute('aria-pressed', m === 'listening' ? 'true' : 'false');
+    talkBtn.querySelector('.talk-lbl').textContent = m === 'listening' ? 'Listening… tap to stop' : m === 'speaking' ? 'Tap to interrupt' : 'Talk to the symbiote'; }
+  function show(you, it){ box.hidden = false; youEl.textContent = you ? '“' + you + '”' : ''; itEl.textContent = it; }
+
+  function speak(rep){
+    show(youEl.textContent.replace(/^“|”$/g, ''), rep.text);
+    if(!soundOn || !TTS){ setMode('idle'); if(!soundOn) itEl.textContent = rep.text + '  (Sound is off, so we only speak in text.)'; return; }
+    TTS.cancel();
+    const u = new SpeechSynthesisUtterance(rep.say || rep.text);
+    if(voice) u.voice = voice; u.pitch = .3; u.rate = .88; u.volume = 1;
+    u.onstart = () => { setMode('speaking'); duck(true); clearInterval(mouth); mouth = setInterval(() => { SYM.speak = Math.max(SYM.speak, .35 + Math.random()*.6); }, 130); };
+    u.onboundary = () => { SYM.speak = 1; };
+    u.onend = u.onerror = () => { clearInterval(mouth); setMode('idle'); duck(false); };
+    TTS.speak(u);
+  }
+  function handle(q){
+    q = (q || '').trim(); if(!q) return;
+    show(q, '…'); setMode('thinking'); crawl();
+    setTimeout(() => { squelch(); speak(answer(q)); }, 450);
+  }
+
+  /* listening */
+  let rec = null, heard = '';
+  function listen(){
+    if(!SR){ openType("Our ears do not work in this browser. Type to us instead."); return; }
+    if(!rec){ rec = new SR(); rec.lang = /^en/i.test(navigator.language) ? navigator.language : 'en-IN'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+      rec.onresult = e => { let txt = ''; for(let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript; heard = txt; show(txt, 'Listening…');
+        if(e.results[e.results.length - 1].isFinal){ const q = txt; heard = ''; try{ rec.stop(); }catch(_){} handle(q); } };
+      rec.onerror = e => { if(e.error === 'not-allowed' || e.error === 'service-not-allowed') { setMode('idle'); openType("We cannot hear you. Allow the microphone, or type to us."); }
+        else if(e.error === 'no-speech'){ setMode('idle'); show('', "We heard only silence. Tap us and speak."); }
+        else if(e.error !== 'aborted'){ setMode('idle'); openType("Our ears failed. Type to us instead."); } };
+      rec.onend = () => { if(SYM.mode === 'listening'){ if(heard){ const q = heard; heard = ''; handle(q); } else setMode('idle'); } };
+    }
+    heard = ''; show('', 'Listening…'); setMode('listening'); bubble(0, 1); bubble(.07, .8);
+    try{ rec.start(); }catch(_){ /* already running */ }
+  }
+  function openType(msg){ form.hidden = false; if(msg) show('', msg); setTimeout(() => qIn.focus(), 50); }
+
+  function toggle(){
+    if(TTS && TTS.speaking){ TTS.cancel(); clearInterval(mouth); setMode('idle'); duck(false); return; }
+    if(SYM.mode === 'listening'){ try{ rec && rec.stop(); }catch(_){} setMode('idle'); return; }
+    if(TTS && !voice) pickVoice();
+    if(TTS){ try{ const w = new SpeechSynthesisUtterance(''); w.volume = 0; TTS.speak(w); }catch(_){} } // unlock speech inside the tap (iOS)
+    listen();
+  }
+  talkBtn.addEventListener('click', toggle);
+  typeBtn.addEventListener('click', () => openType(''));
+  form.addEventListener('submit', e => { e.preventDefault(); const q = qIn.value; qIn.value = ''; handle(q); });
+  /* tapping the mass itself also wakes it */
+  document.querySelector('.hero').addEventListener('click', e => { if(e.target.closest('a,button,input,form')) return; if(SYM.hit(e.clientX, e.clientY)) toggle(); });
+})();
 /* ---------------- 3D panther (drag to spin) ---------------- */
 const pc = document.getElementById('pan3d');
 if(pc && window.THREE && THREE.GLTFLoader){
