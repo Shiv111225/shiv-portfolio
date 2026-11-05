@@ -430,6 +430,42 @@ function purr(){ if(!ready()) return; const t = ctx.currentTime, o = out(.22, .2
   const g = ctx.createGain(); env(g, t, .15, .9, 1.05); const lfo = ctx.createOscillator(); lfo.frequency.value = 26; const lg = ctx.createGain(); lg.gain.value = .6; lfo.connect(lg).connect(g.gain);
   n.connect(lp).connect(g).connect(o); n.start(t); n.stop(t+1.3); lfo.start(t); lfo.stop(t+1.3); }
 
+/* ---- scroll: a ratchet you can feel, plus the symbiote stretching underneath ---- */
+let tickN = 0;
+/* one detent of the ratchet: glassy tick + tiny body; alternates tick/tock, accents every 8th, rises with speed */
+function scrollTick(speed, down){ if(!ready() || !gate('st', 30)) return;
+  const t = ctx.currentTime, n = ++tickN, accent = n % 8 === 0, alt = n % 2 ? 1 : .9;
+  const p = (down ? 1 : .84) * alt * (1 + speed*.45) * (.98 + Math.random()*.04);
+  const o = out((accent ? .13 : .075) + speed*.03, .07);
+  tone(o, t, 'triangle', 3100*p, 2300*p, .55, .014, .0008);
+  noiseHit(o, t, .012, 'highpass', 5200, .8, .35, .007, .0006);
+  tone(o, t, 'sine', (accent ? 140 : 190)*p, 90*p, accent ? .7 : .35, accent ? .05 : .025, .001);
+  if(Math.random() < .05 + speed*.12) bubble(.004 + Math.random()*.03, .7 + speed*.5);
+}
+/* scroll stops: the ratchet locks with a soft low click */
+function scrollLock(){ if(!ready() || !gate('sk', 250)) return; const t = ctx.currentTime, o = out(.1, .12);
+  tone(o, t, 'sine', 420, 160, .6, .06, .001); noiseHit(o, t, .02, 'bandpass', 1800, 2, .35, .012, .001); }
+/* a wet bubble surfacing and popping */
+function bubble(delay=0, size=1){ if(!ready()) return; const t = ctx.currentTime + delay, o = out(.11*size, .3);
+  const f0 = (230 + Math.random()*320) / Math.max(.6, size), d = .022 + Math.random()*.03;
+  tone(o, t, 'sine', f0, f0*(2.6 + Math.random()), .8, d, .002);
+  noiseHit(o, t + d*.8, .015, 'bandpass', 2400 + Math.random()*1500, 3, .25, .01, .001); }
+/* symbiote ooze: a resonant, wobbling wet layer whose level follows scroll speed */
+let oz = null;
+function oozeNodes(){ if(oz || !ac()) return oz;
+  const src = ctx.createBufferSource(); src.buffer = noise(2); src.loop = true;
+  const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 300; bp.Q.value = 7;
+  const lfo = ctx.createOscillator(); lfo.frequency.value = 6.5; const lg = ctx.createGain(); lg.gain.value = 140; lfo.connect(lg).connect(bp.frequency);
+  const g = ctx.createGain(); g.gain.value = 0;
+  src.connect(bp).connect(g).connect(out(1, .35)); src.start(); lfo.start();
+  return oz = { bp, lfo, g }; }
+function ooze(speed){ if(!soundOn){ if(oz) oz.g.gain.setTargetAtTime(0, ctx.currentTime, .05); return; }
+  if(!ctx || !oozeNodes()) return; const t = ctx.currentTime;
+  oz.g.gain.setTargetAtTime(Math.min(.16, speed*.07), t, .06);
+  oz.bp.frequency.setTargetAtTime(240 + speed*420, t, .08);
+  oz.lfo.frequency.setTargetAtTime(5 + speed*6, t, .1); }
+function oozeStop(){ if(oz) oz.g.gain.setTargetAtTime(0, ctx.currentTime, .18); }
+
 /* ---- drum kit (every skill key is a drum) ---- */
 const DR = {
   kick(o,t){ tone(o,t,'sine',150,42,1,.42,.002); noiseHit(o,t,.02,'lowpass',900,.7,.4,.012,.001); },
@@ -456,7 +492,7 @@ function drum(name){ if(!ready() || !DR[name]) return; DR[name](out(.5, .16), ct
 function setSound(on){
   soundOn = on; store.set('snd', on?'1':'0'); store.set('asked','1');
   sndBtn.setAttribute('aria-pressed', on?'true':'false'); sndBtn.querySelector('span').textContent = on?'Sound on':'Sound off';
-  if(on){ ac(); purr(); setTimeout(() => growl(false), 700); }
+  if(on){ ac(); purr(); setTimeout(() => growl(false), 700); } else oozeStop();
 }
 sndBtn.addEventListener('click', () => { greeted = true; setSound(!soundOn); });
 /* browsers only allow audio after the first click or key press: wake the audio then, with a greeting */
@@ -468,6 +504,18 @@ document.querySelectorAll('.gbtn').forEach(b => { b.addEventListener('mouseenter
 document.querySelectorAll('.links a,.ghost,.logo').forEach(l => { l.addEventListener('mouseenter', tick); l.addEventListener('click', () => thock(1.4)); });
 document.querySelectorAll('.card').forEach(c => { c.addEventListener('mouseenter', crawl); c.addEventListener('mouseleave', slurp); c.addEventListener('focus', crawl); });
 document.querySelectorAll('.tl .it').forEach((it,i) => it.addEventListener('mouseenter', () => { if(gate('tl'+i, 600)) { scratch(0, 1.1); scratch(.05, 1.2); scratch(.1, 1.3); } }));
+/* scrolling: a detent tick every STEP px (denser and higher when fast), ooze follows speed, lock click on stop */
+(() => { const STEP = 52; let lastY = scrollY, lastT = performance.now(), acc = 0, vel = 0, moved = 0, stopT = 0;
+  addEventListener('scroll', () => {
+    const y = scrollY, now = performance.now(), dy = y - lastY, dt = Math.max(8, now - lastT);
+    lastY = y; lastT = now; vel = vel*.55 + (Math.abs(dy)/dt)*.45; acc += Math.abs(dy); moved += Math.abs(dy);
+    const speed = Math.min(1, vel/3);
+    if(acc >= STEP){ acc %= STEP; scrollTick(speed, dy > 0); }
+    ooze(speed);
+    clearTimeout(stopT); stopT = setTimeout(() => { oozeStop(); if(moved > STEP*2) scrollLock(); moved = 0; vel = 0; }, 150);
+  }, {passive:true});
+  addEventListener('visibilitychange', () => { if(document.hidden) oozeStop(); });
+})();
 document.querySelector('.hero').addEventListener('pointermove', e => { if(e.clientX > innerWidth*.6) growl(true); });
 const seen = new Set();
 const secIO = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting && !seen.has(e.target.id)){ seen.add(e.target.id); whoosh(); } }), {threshold:.35});
@@ -673,7 +721,7 @@ if(sc && window.THREE){
   const small = innerWidth < 720;
   const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(1, small ? 40 : 80), mat); S.add(blob);
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), hit = new THREE.Vector3(), sph = new THREE.Sphere(new THREE.Vector3(), 1.3);
-  let target = new THREE.Vector2(), agit = 0, active = true, last = performance.now(), home = new THREE.Vector3();
+  let touching = false, target = new THREE.Vector2(), agit = 0, active = true, last = performance.now(), home = new THREE.Vector3();
   function size(){ const w = sc.clientWidth, h = sc.clientHeight; if(!w||!h) return; R.setSize(w, h, false); C.aspect = w/h; C.updateProjectionMatrix();
     // world-space viewport size at z=0, used to place the mass between the name and the panther's head
     const vh = 2*Math.tan(THREE.MathUtils.degToRad(17.5))*7, vw = vh*C.aspect;
@@ -683,8 +731,10 @@ if(sc && window.THREE){
   size(); addEventListener('resize', size);
   addEventListener('pointermove', e => { const r = sc.getBoundingClientRect();
     const nx = ((e.clientX - r.left)/r.width)*2 - 1, ny = -((e.clientY - r.top)/r.height)*2 + 1;
-    agit = Math.min(1, agit + Math.hypot(nx - target.x, ny - target.y)*3); target.set(nx, ny); });
-  addEventListener('pointerdown', () => { agit = 1; });
+    const jolt = Math.hypot(nx - target.x, ny - target.y)*3;
+    agit = Math.min(1, agit + jolt); target.set(nx, ny);
+    if(touching && jolt > .12 && gate('sg', 140)) { bubble(0, .9); if(jolt > .3) bubble(.05, 1.2); } });
+  addEventListener('pointerdown', () => { agit = 1; if(touching && active){ squelch(); bubble(.08, 1); bubble(.16, .8); } });
   new IntersectionObserver(es => { const was = active; active = es[0].isIntersecting; if(active && !was) loop(); }, {threshold:0}).observe(sc);
   function loop(){
     if(!active) return;
@@ -693,7 +743,8 @@ if(sc && window.THREE){
     agit *= .95; U.uAgit.value += (agit - U.uAgit.value)*.1;
     ndc.lerp(target, .08); ray.setFromCamera(ndc, C);
     sph.center.copy(blob.position); sph.radius = 1.3*blob.scale.x;
-    if(ray.ray.intersectSphere(sph, hit)){ blob.worldToLocal(hit); U.uMouse.value.lerp(hit, .15); }
+    touching = !!ray.ray.intersectSphere(sph, hit);
+    if(touching){ blob.worldToLocal(hit); U.uMouse.value.lerp(hit, .15); }
     else { ray.ray.closestPointToPoint(blob.position, hit); blob.worldToLocal(hit); U.uMouse.value.lerp(hit.multiplyScalar(3), .05); }
     blob.rotation.y = U.uTime.value*.12 + ndc.x*.4; blob.rotation.x = ndc.y*.3;
     blob.position.x = home.x + ndc.x*.15; blob.position.y = home.y + ndc.y*.1 + Math.sin(U.uTime.value*.8)*.05;
