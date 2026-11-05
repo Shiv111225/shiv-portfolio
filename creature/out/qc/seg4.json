@@ -1,0 +1,1150 @@
+{
+ "segment": 4,
+ "name": "Strike",
+ "frames": [
+  480,
+  599
+ ],
+ "time": [
+  20.0,
+  25.0
+ ],
+ "checks": {
+  "frames": {
+   "ok": true,
+   "detail": "120/120 present, 0 wrong format, 0 duplicates",
+   "missing": [],
+   "bad": [],
+   "duplicates": []
+  },
+  "exposure": {
+   "ok": true,
+   "detail": "mean luma 0.124..0.161, letterbox breaches 0",
+   "luma": [
+    0.14300000667572021,
+    0.14249999821186066,
+    0.14190000295639038,
+    0.14139999449253082,
+    0.14030000567436218,
+    0.13979999721050262,
+    0.13940000534057617,
+    0.13940000534057617,
+    0.13910000026226044,
+    0.13850000500679016,
+    0.13740000128746033,
+    0.1363999992609024,
+    0.13529999554157257,
+    0.13439999520778656,
+    0.13379999995231628,
+    0.1331000030040741,
+    0.13230000436306,
+    0.13169999420642853,
+    0.13099999725818634,
+    0.13050000369548798,
+    0.1298999935388565,
+    0.12960000336170197,
+    0.12929999828338623,
+    0.12960000336170197,
+    0.12939999997615814,
+    0.12890000641345978,
+    0.12860000133514404,
+    0.1289999932050705,
+    0.1298000067472458,
+    0.1298999935388565,
+    0.13050000369548798,
+    0.13009999692440033,
+    0.13199999928474426,
+    0.14499999582767487,
+    0.1445000022649765,
+    0.14259999990463257,
+    0.14000000059604645,
+    0.13729999959468842,
+    0.13650000095367432,
+    0.1348000019788742,
+    0.13369999825954437,
+    0.13330000638961792,
+    0.13330000638961792,
+    0.133200004696846,
+    0.13359999656677246,
+    0.1339000016450882,
+    0.13420000672340393,
+    0.1347000002861023,
+    0.13519999384880066,
+    0.13570000231266022,
+    0.1362999975681305,
+    0.13680000603199005,
+    0.13729999959468842,
+    0.1379999965429306,
+    0.13840000331401825,
+    0.13860000669956207,
+    0.13910000026226044,
+    0.13950000703334808,
+    0.14000000059604645,
+    0.1404999941587448,
+    0.14079999923706055,
+    0.14110000431537628,
+    0.14149999618530273,
+    0.1420000046491623,
+    0.14219999313354492,
+    0.14239999651908875,
+    0.1429000049829483,
+    0.14300000667572021,
+    0.14319999516010284,
+    0.14339999854564667,
+    0.1436000019311905,
+    0.1437000036239624,
+    0.1437000036239624,
+    0.14380000531673431,
+    0.14339999854564667,
+    0.14249999821186066,
+    0.14149999618530273,
+    0.14079999923706055,
+    0.14219999313354492,
+    0.14830000698566437,
+    0.16060000658035278,
+    0.1607999950647354,
+    0.15649999678134918,
+    0.15320000052452087,
+    0.14949999749660492,
+    0.14890000224113464,
+    0.14659999310970306,
+    0.14390000700950623,
+    0.14259999990463257,
+    0.14159999787807465,
+    0.1404999941587448,
+    0.13940000534057617,
+    0.13840000331401825,
+    0.13770000636577606,
+    0.1363999992609024,
+    0.1356000006198883,
+    0.1348000019788742,
+    0.13410000503063202,
+    0.13349999487400055,
+    0.13249999284744263,
+    0.13199999928474426,
+    0.13130000233650208,
+    0.1306000053882599,
+    0.1298999935388565,
+    0.12939999997615814,
+    0.12870000302791595,
+    0.12809999287128448,
+    0.1274999976158142,
+    0.12690000236034393,
+    0.12639999389648438,
+    0.125900000333786,
+    0.12530000507831573,
+    0.12489999830722809,
+    0.12460000067949295,
+    0.1242000013589859,
+    0.12399999797344208,
+    0.12380000203847885,
+    0.12380000203847885,
+    0.12370000034570694,
+    0.12359999865293503
+   ]
+  },
+  "pops": {
+   "ok": true,
+   "detail": "0 unexplained pops (median residual 0.0041), 1 spikes inside action events",
+   "pops": []
+  },
+  "bones": {
+   "ok": true,
+   "detail": "max bone length drift 0.0000 %"
+  },
+  "ik": {
+   "ok": true,
+   "detail": "max IK reach 0.868 (arms+legs)"
+  },
+  "feet": {
+   "ok": true,
+   "detail": "planted-foot slide 0.0000 px/frame, max sink 0.000 px"
+  },
+  "jerk": {
+   "ok": true,
+   "detail": "0 unexplained joint acceleration spikes; peak accel 263.9 px/frame^2",
+   "spikes": []
+  },
+  "freeze": {
+   "ok": true,
+   "detail": "0 frozen frames while rig moving",
+   "frozen": []
+  },
+  "cloth": {
+   "ok": true,
+   "detail": "finite=True, max segment stretch 1.010x, max below ground -1.00 px"
+  },
+  "seam": {
+   "ok": true,
+   "detail": "f480: 0.74x median",
+   "seams": [
+    {
+     "boundary": 480,
+     "residual": 0.003,
+     "ratio": 0.74
+    }
+   ]
+  }
+ },
+ "intentional": [
+  {
+   "check": "pops",
+   "frame": 560,
+   "residual": 0.0144,
+   "ratio": 3.1,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 502,
+   "joint": "f_f0_tip",
+   "accel": 14.8,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 502,
+   "joint": "f_f1_tip",
+   "accel": 14.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 502,
+   "joint": "f_f2_tip",
+   "accel": 14.4,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 502,
+   "joint": "f_f3_tip",
+   "accel": 14.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 502,
+   "joint": "f_kn",
+   "accel": 14.3,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 502,
+   "joint": "f_wr",
+   "accel": 13.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_el",
+   "accel": 14.3,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_f0_tip",
+   "accel": 22.5,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_f1_tip",
+   "accel": 22.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_f2_tip",
+   "accel": 21.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_f3_tip",
+   "accel": 21.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_kn",
+   "accel": 21.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 503,
+   "joint": "f_wr",
+   "accel": 19.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 504,
+   "joint": "f_f0_tip",
+   "accel": 17.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 504,
+   "joint": "f_f1_tip",
+   "accel": 17.3,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 504,
+   "joint": "f_f2_tip",
+   "accel": 16.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 504,
+   "joint": "f_f3_tip",
+   "accel": 16.4,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 504,
+   "joint": "f_kn",
+   "accel": 16.8,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 504,
+   "joint": "f_wr",
+   "accel": 15.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 507,
+   "joint": "f_f0_tip",
+   "accel": 17.4,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 507,
+   "joint": "f_f1_tip",
+   "accel": 17.4,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 507,
+   "joint": "f_f2_tip",
+   "accel": 17.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 507,
+   "joint": "f_f3_tip",
+   "accel": 16.5,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 507,
+   "joint": "f_kn",
+   "accel": 15.5,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 507,
+   "joint": "f_wr",
+   "accel": 14.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 508,
+   "joint": "f_f0_tip",
+   "accel": 17.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 508,
+   "joint": "f_f1_tip",
+   "accel": 17.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 508,
+   "joint": "f_f2_tip",
+   "accel": 16.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 508,
+   "joint": "f_f3_tip",
+   "accel": 16.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 508,
+   "joint": "f_kn",
+   "accel": 15.8,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 508,
+   "joint": "f_wr",
+   "accel": 14.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_el",
+   "accel": 51.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_f0_tip",
+   "accel": 194.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_f1_tip",
+   "accel": 200.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_f2_tip",
+   "accel": 198.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_f3_tip",
+   "accel": 189.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_hand_tip",
+   "accel": 200.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_kn",
+   "accel": 152.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 509,
+   "joint": "n_wr",
+   "accel": 129.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_el",
+   "accel": 63.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_f0_tip",
+   "accel": 254.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_f1_tip",
+   "accel": 263.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_f2_tip",
+   "accel": 261.7,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_f3_tip",
+   "accel": 248.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_hand_tip",
+   "accel": 263.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_kn",
+   "accel": 198.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 510,
+   "joint": "n_wr",
+   "accel": 167.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_el",
+   "accel": 65.8,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_f0_tip",
+   "accel": 225.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_f1_tip",
+   "accel": 233.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_f2_tip",
+   "accel": 231.5,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_f3_tip",
+   "accel": 221.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_hand_tip",
+   "accel": 233.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_kn",
+   "accel": 178.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 511,
+   "joint": "n_wr",
+   "accel": 153.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_el",
+   "accel": 40.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_f0_tip",
+   "accel": 116.8,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_f1_tip",
+   "accel": 120.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_f2_tip",
+   "accel": 120.5,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_f3_tip",
+   "accel": 115.8,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_hand_tip",
+   "accel": 120.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_kn",
+   "accel": 94.6,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 512,
+   "joint": "n_wr",
+   "accel": 82.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_f0_tip",
+   "accel": 66.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_f1_tip",
+   "accel": 68.4,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_f2_tip",
+   "accel": 68.0,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_f3_tip",
+   "accel": 65.1,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_hand_tip",
+   "accel": 68.4,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_kn",
+   "accel": 52.9,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 513,
+   "joint": "n_wr",
+   "accel": 46.2,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 514,
+   "joint": "n_f2_tip",
+   "accel": 44.3,
+   "event": "claw slash smear + impact shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 553,
+   "joint": "f_el",
+   "accel": 24.2,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 553,
+   "joint": "f_wr",
+   "accel": 34.4,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_el",
+   "accel": 23.4,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_f0_tip",
+   "accel": 45.1,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_f1_tip",
+   "accel": 46.7,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_f2_tip",
+   "accel": 47.0,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_f3_tip",
+   "accel": 45.9,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_kn",
+   "accel": 39.5,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 556,
+   "joint": "f_wr",
+   "accel": 36.5,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_el",
+   "accel": 27.8,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_f0_tip",
+   "accel": 48.6,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_f1_tip",
+   "accel": 50.4,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_f2_tip",
+   "accel": 51.1,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_f3_tip",
+   "accel": 50.5,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_kn",
+   "accel": 44.5,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 557,
+   "joint": "f_wr",
+   "accel": 42.0,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_el",
+   "accel": 23.7,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_f0_tip",
+   "accel": 42.1,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_f1_tip",
+   "accel": 43.3,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_f2_tip",
+   "accel": 44.0,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_f3_tip",
+   "accel": 43.7,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_kn",
+   "accel": 39.7,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 558,
+   "joint": "f_wr",
+   "accel": 37.8,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_el",
+   "accel": 20.4,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_f0_tip",
+   "accel": 41.8,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_f1_tip",
+   "accel": 43.0,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_f2_tip",
+   "accel": 43.3,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_f3_tip",
+   "accel": 42.6,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_kn",
+   "accel": 38.3,
+   "event": "backhand smear + shake"
+  },
+  {
+   "check": "jerk",
+   "frame": 559,
+   "joint": "f_wr",
+   "accel": 35.7,
+   "event": "backhand smear + shake"
+  }
+ ],
+ "ok": true,
+ "diff": {
+  "480": 0.00383,
+  "481": 0.00384,
+  "482": 0.00435,
+  "483": 0.00461,
+  "484": 0.00487,
+  "485": 0.00538,
+  "486": 0.00579,
+  "487": 0.00606,
+  "488": 0.00613,
+  "489": 0.00603,
+  "490": 0.00588,
+  "491": 0.00531,
+  "492": 0.00469,
+  "493": 0.00457,
+  "494": 0.0043,
+  "495": 0.00419,
+  "496": 0.00408,
+  "497": 0.00408,
+  "498": 0.00386,
+  "499": 0.00388,
+  "500": 0.00371,
+  "501": 0.00342,
+  "502": 0.00332,
+  "503": 0.0047,
+  "504": 0.00577,
+  "505": 0.00717,
+  "506": 0.00819,
+  "507": 0.00845,
+  "508": 0.0082,
+  "509": 0.00826,
+  "510": 0.00877,
+  "511": 0.00913,
+  "512": 0.01228,
+  "513": 0.02082,
+  "514": 0.01388,
+  "515": 0.00968,
+  "516": 0.00938,
+  "517": 0.00741,
+  "518": 0.01005,
+  "519": 0.00879,
+  "520": 0.0092,
+  "521": 0.00661,
+  "522": 0.0055,
+  "523": 0.00768,
+  "524": 0.00831,
+  "525": 0.00517,
+  "526": 0.0071,
+  "527": 0.0061,
+  "528": 0.00587,
+  "529": 0.00508,
+  "530": 0.00434,
+  "531": 0.00549,
+  "532": 0.00595,
+  "533": 0.00445,
+  "534": 0.00443,
+  "535": 0.0051,
+  "536": 0.0054,
+  "537": 0.00491,
+  "538": 0.00446,
+  "539": 0.00469,
+  "540": 0.00476,
+  "541": 0.00467,
+  "542": 0.00423,
+  "543": 0.00386,
+  "544": 0.00424,
+  "545": 0.00348,
+  "546": 0.00339,
+  "547": 0.00376,
+  "548": 0.00344,
+  "549": 0.00355,
+  "550": 0.0034,
+  "551": 0.00338,
+  "552": 0.00352,
+  "553": 0.00356,
+  "554": 0.00448,
+  "555": 0.00535,
+  "556": 0.00658,
+  "557": 0.00748,
+  "558": 0.00712,
+  "559": 0.01072,
+  "560": 0.01866,
+  "561": 0.01319,
+  "562": 0.01152,
+  "563": 0.00741,
+  "564": 0.00749,
+  "565": 0.00658,
+  "566": 0.00725,
+  "567": 0.00862,
+  "568": 0.00544,
+  "569": 0.00572,
+  "570": 0.00526,
+  "571": 0.00508,
+  "572": 0.00536,
+  "573": 0.00558,
+  "574": 0.00565,
+  "575": 0.00593,
+  "576": 0.00419,
+  "577": 0.0041,
+  "578": 0.00409,
+  "579": 0.00505,
+  "580": 0.004,
+  "581": 0.00378,
+  "582": 0.00386,
+  "583": 0.00364,
+  "584": 0.00361,
+  "585": 0.00367,
+  "586": 0.00352,
+  "587": 0.00357,
+  "588": 0.00353,
+  "589": 0.00333,
+  "590": 0.00334,
+  "591": 0.00339,
+  "592": 0.00339,
+  "593": 0.00329,
+  "594": 0.00329,
+  "595": 0.00333,
+  "596": 0.0033,
+  "597": 0.00334,
+  "598": 0.00328,
+  "599": 0.00328
+ },
+ "resid": {
+  "480": 0.00304,
+  "481": 0.00331,
+  "482": 0.00363,
+  "483": 0.00378,
+  "484": 0.00422,
+  "485": 0.00462,
+  "486": 0.00488,
+  "487": 0.00512,
+  "488": 0.00513,
+  "489": 0.005,
+  "490": 0.00463,
+  "491": 0.00412,
+  "492": 0.00377,
+  "493": 0.00359,
+  "494": 0.0034,
+  "495": 0.00333,
+  "496": 0.00328,
+  "497": 0.00322,
+  "498": 0.00313,
+  "499": 0.0031,
+  "500": 0.00292,
+  "501": 0.00291,
+  "502": 0.00342,
+  "503": 0.00439,
+  "504": 0.00536,
+  "505": 0.00644,
+  "506": 0.00699,
+  "507": 0.00686,
+  "508": 0.00665,
+  "509": 0.00683,
+  "510": 0.00738,
+  "511": 0.00915,
+  "512": 0.01513,
+  "513": 0.01583,
+  "514": 0.00935,
+  "515": 0.00758,
+  "516": 0.00602,
+  "517": 0.00744,
+  "518": 0.00827,
+  "519": 0.00752,
+  "520": 0.00689,
+  "521": 0.00477,
+  "522": 0.00582,
+  "523": 0.00732,
+  "524": 0.0057,
+  "525": 0.0054,
+  "526": 0.00597,
+  "527": 0.00465,
+  "528": 0.0049,
+  "529": 0.00364,
+  "530": 0.00422,
+  "531": 0.00492,
+  "532": 0.00454,
+  "533": 0.00346,
+  "534": 0.00406,
+  "535": 0.0045,
+  "536": 0.00454,
+  "537": 0.00396,
+  "538": 0.00389,
+  "539": 0.00357,
+  "540": 0.00403,
+  "541": 0.00384,
+  "542": 0.00328,
+  "543": 0.00339,
+  "544": 0.00331,
+  "545": 0.00292,
+  "546": 0.00307,
+  "547": 0.00291,
+  "548": 0.00303,
+  "549": 0.00301,
+  "550": 0.00281,
+  "551": 0.00281,
+  "552": 0.00307,
+  "553": 0.0033,
+  "554": 0.00415,
+  "555": 0.0051,
+  "556": 0.00602,
+  "557": 0.00647,
+  "558": 0.0082,
+  "559": 0.01318,
+  "560": 0.01443,
+  "561": 0.01043,
+  "562": 0.00706,
+  "563": 0.00471,
+  "564": 0.00595,
+  "565": 0.00512,
+  "566": 0.00653,
+  "567": 0.00591,
+  "568": 0.00413,
+  "569": 0.00475,
+  "570": 0.00421,
+  "571": 0.00391,
+  "572": 0.00467,
+  "573": 0.00494,
+  "574": 0.005,
+  "575": 0.00438,
+  "576": 0.00335,
+  "577": 0.00328,
+  "578": 0.00382,
+  "579": 0.00389,
+  "580": 0.00312,
+  "581": 0.00316,
+  "582": 0.00305,
+  "583": 0.00288,
+  "584": 0.00301,
+  "585": 0.00296,
+  "586": 0.00292,
+  "587": 0.00304,
+  "588": 0.00281,
+  "589": 0.00273,
+  "590": 0.0028,
+  "591": 0.0028,
+  "592": 0.00281,
+  "593": 0.00275,
+  "594": 0.00275,
+  "595": 0.00276,
+  "596": 0.00277,
+  "597": 0.00277,
+  "598": 0.00275,
+  "599": 0.00271
+ }
+}

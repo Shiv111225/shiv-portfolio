@@ -1,0 +1,132 @@
+{
+ "segments": [
+  {
+   "segment": 0,
+   "name": "Dormant",
+   "ok": true,
+   "checks": {
+    "frames": "120/120 present, 0 wrong format, 0 duplicates",
+    "exposure": "mean luma 0.115..0.132, letterbox breaches 0",
+    "pops": "0 unexplained pops (median residual 0.0050), 0 spikes inside action events",
+    "bones": "max bone length drift 0.0000 %",
+    "ik": "max IK reach 0.567 (arms+legs)",
+    "feet": "planted-foot slide 0.0000 px/frame, max sink 0.000 px",
+    "jerk": "0 unexplained joint acceleration spikes; peak accel 0.0 px/frame^2",
+    "freeze": "0 frozen frames while rig moving",
+    "cloth": "finite=True, max segment stretch 1.002x, max below ground -1.00 px",
+    "seam": "n/a",
+    "determinism": "re-rendered f67: max abs diff 0"
+   },
+   "intentional": 0
+  },
+  {
+   "segment": 1,
+   "name": "Awakening",
+   "ok": true,
+   "checks": {
+    "frames": "120/120 present, 0 wrong format, 0 duplicates",
+    "exposure": "mean luma 0.115..0.135, letterbox breaches 0",
+    "pops": "0 unexplained pops (median residual 0.0056), 0 spikes inside action events",
+    "bones": "max bone length drift 0.0000 %",
+    "ik": "max IK reach 0.843 (arms+legs)",
+    "feet": "planted-foot slide 0.0000 px/frame, max sink 0.000 px",
+    "jerk": "0 unexplained joint acceleration spikes; peak accel 12.9 px/frame^2",
+    "freeze": "0 frozen frames while rig moving",
+    "cloth": "finite=True, max segment stretch 1.006x, max below ground -1.00 px",
+    "seam": "f120: 0.9x median",
+    "determinism": "re-rendered f187: max abs diff 0"
+   },
+   "intentional": 0
+  },
+  {
+   "segment": 2,
+   "name": "Stalk",
+   "ok": true,
+   "checks": {
+    "frames": "120/120 present, 0 wrong format, 0 duplicates",
+    "exposure": "mean luma 0.121..0.143, letterbox breaches 0",
+    "pops": "0 unexplained pops (median residual 0.0058), 0 spikes inside action events",
+    "bones": "max bone length drift 0.0000 %",
+    "ik": "max IK reach 0.873 (arms+legs)",
+    "feet": "planted-foot slide 0.0000 px/frame, max sink 0.000 px",
+    "jerk": "0 unexplained joint acceleration spikes; peak accel 14.0 px/frame^2",
+    "freeze": "0 frozen frames while rig moving",
+    "cloth": "finite=True, max segment stretch 1.004x, max below ground -1.00 px",
+    "seam": "f240: 0.95x median",
+    "determinism": "re-rendered f307: max abs diff 0"
+   },
+   "intentional": 0
+  },
+  {
+   "segment": 3,
+   "name": "Roar",
+   "ok": true,
+   "checks": {
+    "frames": "120/120 present, 0 wrong format, 0 duplicates",
+    "exposure": "mean luma 0.128..0.180, letterbox breaches 0",
+    "pops": "0 unexplained pops (median residual 0.0066), 0 spikes inside action events",
+    "bones": "max bone length drift 0.0000 %",
+    "ik": "max IK reach 0.889 (arms+legs)",
+    "feet": "planted-foot slide 0.0000 px/frame, max sink 0.000 px",
+    "jerk": "0 unexplained joint acceleration spikes; peak accel 18.7 px/frame^2",
+    "freeze": "0 frozen frames while rig moving",
+    "cloth": "finite=True, max segment stretch 1.008x, max below ground -1.00 px",
+    "seam": "f360: 0.91x median",
+    "determinism": "re-rendered f427: max abs diff 0"
+   },
+   "intentional": 44
+  },
+  {
+   "segment": 4,
+   "name": "Strike",
+   "ok": true,
+   "checks": {
+    "frames": "120/120 present, 0 wrong format, 0 duplicates",
+    "exposure": "mean luma 0.124..0.160, letterbox breaches 0",
+    "pops": "0 unexplained pops (median residual 0.0068), 0 spikes inside action events",
+    "bones": "max bone length drift 0.0000 %",
+    "ik": "max IK reach 0.868 (arms+legs)",
+    "feet": "planted-foot slide 0.0000 px/frame, max sink 0.000 px",
+    "jerk": "0 unexplained joint acceleration spikes; peak accel 263.9 px/frame^2",
+    "freeze": "0 frozen frames while rig moving",
+    "cloth": "finite=True, max segment stretch 1.010x, max below ground -1.00 px",
+    "seam": "f480: 0.83x median",
+    "determinism": "re-rendered f547: max abs diff 0"
+   },
+   "intentional": 101
+  },
+  {
+   "segment": 5,
+   "name": "Recede",
+   "ok": true,
+   "checks": {
+    "frames": "120/120 present, 0 wrong format, 0 duplicates",
+    "exposure": "mean luma 0.123..0.172, letterbox breaches 0",
+    "pops": "0 unexplained pops (median residual 0.0050), 0 spikes inside action events",
+    "bones": "max bone length drift 0.0000 %",
+    "ik": "max IK reach 0.875 (arms+legs)",
+    "feet": "planted-foot slide 0.0000 px/frame, max sink 0.000 px",
+    "jerk": "0 unexplained joint acceleration spikes; peak accel 11.8 px/frame^2",
+    "freeze": "0 frozen frames while rig moving",
+    "cloth": "finite=True, max segment stretch 1.006x, max below ground -1.00 px",
+    "seam": "f600: 1.04x median",
+    "determinism": "re-rendered f667: max abs diff 0"
+   },
+   "intentional": 0
+  }
+ ],
+ "encode": {
+  "ok": true,
+  "frames": 720,
+  "duration": 30.0,
+  "fps": "24/1",
+  "size": [
+   1280,
+   720
+  ],
+  "psnr_avg": 46.784029,
+  "psnr_min": 45.473776,
+  "bytes": 43993144
+ },
+ "ok": true
+}
