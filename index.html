@@ -351,7 +351,7 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
   </div>
 </section>
 </main>
-<footer><span>© 2026 Shiv Shrivastav</span><span>Panther and goo built with three.js · sounds synthesised in the browser</span></footer>
+<footer><span>© 2026 Shiv Shrivastav</span><span>Panther and goo built with three.js · sounds synthesised in the browser · music: “What Did I Miss”</span></footer>
 
 </div>
 
@@ -466,6 +466,27 @@ function ooze(speed){ if(!soundOn){ if(oz) oz.g.gain.setTargetAtTime(0, ctx.curr
   oz.lfo.frequency.setTargetAtTime(5 + speed*6, t, .1); }
 function oozeStop(){ if(oz) oz.g.gain.setTargetAtTime(0, ctx.currentTime, .18); }
 
+/* ---- background music: "What Did I Miss" loops quietly under everything ---- */
+const MUSIC_VOL = .2;
+let music = null, mGain = null, mStopT = 0;
+function musicStart(){ if(!soundOn || !ac()) return;
+  if(!music){
+    music = new Audio('audio/what-did-i-miss.mp3'); music.loop = true; music.preload = 'auto';
+    const src = ctx.createMediaElementSource(music);
+    const shelf = ctx.createBiquadFilter(); shelf.type = 'highshelf'; shelf.frequency.value = 5500; shelf.gain.value = -4; // leave room for the ticks
+    mGain = ctx.createGain(); mGain.gain.value = 0;
+    src.connect(shelf).connect(mGain).connect(ctx.destination); // straight out: the effects compressor would pump it
+  }
+  clearTimeout(mStopT);
+  const pr = music.play(); if(pr && pr.catch) pr.catch(() => {});
+  mGain.gain.cancelScheduledValues(ctx.currentTime);
+  mGain.gain.setTargetAtTime(MUSIC_VOL, ctx.currentTime, 1.2);
+}
+function musicStop(){ if(!music) return;
+  mGain.gain.cancelScheduledValues(ctx.currentTime);
+  mGain.gain.setTargetAtTime(0, ctx.currentTime, .25);
+  clearTimeout(mStopT); mStopT = setTimeout(() => { if(!soundOn || document.hidden) music.pause(); }, 1000); }
+
 /* ---- drum kit (every skill key is a drum) ---- */
 const DR = {
   kick(o,t){ tone(o,t,'sine',150,42,1,.42,.002); noiseHit(o,t,.02,'lowpass',900,.7,.4,.012,.001); },
@@ -492,12 +513,12 @@ function drum(name){ if(!ready() || !DR[name]) return; DR[name](out(.5, .16), ct
 function setSound(on){
   soundOn = on; store.set('snd', on?'1':'0'); store.set('asked','1');
   sndBtn.setAttribute('aria-pressed', on?'true':'false'); sndBtn.querySelector('span').textContent = on?'Sound on':'Sound off';
-  if(on){ ac(); purr(); setTimeout(() => growl(false), 700); } else oozeStop();
+  if(on){ ac(); purr(); setTimeout(() => growl(false), 700); musicStart(); } else { oozeStop(); musicStop(); }
 }
 sndBtn.addEventListener('click', () => { greeted = true; setSound(!soundOn); });
 /* browsers only allow audio after the first click or key press: wake the audio then, with a greeting */
 let greeted = false;
-const wake = () => { if(greeted) return; greeted = true; if(soundOn){ ac(); purr(); setTimeout(() => growl(false), 650); } };
+const wake = () => { if(greeted) return; greeted = true; if(soundOn){ ac(); purr(); setTimeout(() => growl(false), 650); musicStart(); } };
 addEventListener('pointerdown', wake, {once:false, capture:true}); addEventListener('keydown', wake, {capture:true});
 sndBtn.setAttribute('aria-pressed', soundOn?'true':'false'); sndBtn.querySelector('span').textContent = soundOn?'Sound on':'Sound off';
 document.querySelectorAll('.gbtn').forEach(b => { b.addEventListener('mouseenter', squelch); b.addEventListener('pointerdown', bite); });
@@ -514,7 +535,7 @@ document.querySelectorAll('.tl .it').forEach((it,i) => it.addEventListener('mous
     ooze(speed);
     clearTimeout(stopT); stopT = setTimeout(() => { oozeStop(); if(moved > STEP*2) scrollLock(); moved = 0; vel = 0; }, 150);
   }, {passive:true});
-  addEventListener('visibilitychange', () => { if(document.hidden) oozeStop(); });
+  addEventListener('visibilitychange', () => { if(document.hidden){ oozeStop(); musicStop(); } else if(soundOn && greeted) musicStart(); });
 })();
 document.querySelector('.hero').addEventListener('pointermove', e => { if(e.clientX > innerWidth*.6) growl(true); });
 const seen = new Set();
