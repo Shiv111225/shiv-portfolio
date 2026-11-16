@@ -202,6 +202,9 @@ p{margin:0;color:#cfcac2;max-width:62ch}
 .viewer.stage{background:radial-gradient(70% 60% at 50% 72%,#5a0b10 0%,#22070a 55%,#070506 100%);cursor:grab;touch-action:pan-y}
 .viewer.stage:active{cursor:grabbing}
 .viewer.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.viewer.tt{aspect-ratio:4/5;width:min(100%,480px);justify-self:center;background:#2b231e;cursor:grab;touch-action:pan-y}
+.viewer.tt:active{cursor:grabbing}
+.viewer.tt canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .viewer img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s ease}
 .viewer img.on{opacity:1}
 .viewer .tag3{position:absolute;left:14px;bottom:14px;font:500 12px var(--f-mono);background:rgba(5,5,6,.72);border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--bone)}
@@ -360,14 +363,14 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
     </div>
   </div>
   <div class="w3">
-    <div class="viewer stage" id="v-pan">
-      <canvas id="pan3d" aria-label="Rotating faceted 3D black panther. Drag to spin it."></canvas>
-      <span class="tag3">Drag to spin</span>
+    <div class="viewer tt" id="v-shed">
+      <canvas id="shedtt" aria-label="360-degree turnaround of the SHED outfit: an ivory jacket and wide-leg trousers with oxblood snake embroidery. Drag to turn it."></canvas>
+      <span class="tag3">Drag to turn</span>
     </div>
     <div class="w3t">
-      <div class="yr">2026 · Modelling</div>
-      <h3>Faceted Panther</h3>
-      <p>My panther in 3D: modelled from my own turnaround sheet, carved from its outlines, then faceted into a low-poly sculpture with glossy black panels and amber eyes. Grab it and spin it.</p>
+      <div class="yr">2026 · Fashion design · Blender</div>
+      <h3>SHED</h3>
+      <p>A snake-themed outfit I designed and built in Blender: an ivory funnel-neck jacket and pleated wide-leg trousers, with oxblood snake embroidery that sheds from skin to skeleton, and trainers embossed with the same scales. The garments are sewn from flat patterns and cloth-simulated, not sculpted. Turn it around.</p>
     </div>
   </div>
 </section>
@@ -416,7 +419,6 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/MarchingCubes.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 (() => {
 const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -473,6 +475,10 @@ function chime(){ if(!ready()) return; const t = ctx.currentTime, o = out(.18, .
 /* section arrival: soft airy whoosh, once per section */
 function whoosh(){ if(!ready() || !gate('wh', 900)) return; const t = ctx.currentTime, o = out(.1, .5);
   const f = noiseHit(o, t, .7, 'bandpass', 300, 1.2, .9, .5, .18); f.frequency.exponentialRampToValueAtTime(1300, t+.3); f.frequency.exponentialRampToValueAtTime(450, t+.65); }
+/* SHED: a soft snake hiss when you grab the turnaround */
+function hiss(){ if(!ready() || !gate('hs', 1200)) return; const t = ctx.currentTime, o = out(.16, .3);
+  const f = noiseHit(o, t, 1.0, 'highpass', 3800, .8, .8, .8, .12); f.frequency.linearRampToValueAtTime(5200, t+.6);
+  noiseHit(o, t, .9, 'bandpass', 7000, 2, .35, .7, .1); }
 /* panther: full growl once, soft rumble when you get close to it */
 function growl(soft){ if(!ready()) return; if(!soft){ if(growled) return; growled = true; } else if(!gate('gr', 9000)) return;
   const t = ctx.currentTime, dur = soft ? .8 : 1.4, o = out(soft ? .12 : .24, .35);
@@ -1154,8 +1160,8 @@ if(sc && window.THREE){
     { id:'projects', pri:1, kind:'section', go:'work', k:['what has he made','what did he make','what has he built','what did he build','his projects','projects','portfolio','show me his work','what has he done','his work','what does he make','work samples','what has shiv made','show me something','examples','any projects','his creations','what did shiv build','what has he worked on','work done','kya banaya'],
       r:() => { const o = KB.find(d => d.title === 'Projects'); return o ? { text: o.text } : more(); } },
     { id:'3d', pri:1, kind:'render', go:'threed', k:['his 3d work','3d work','3d','blender work','renders','render','3d stuff','modelling','modeling','3d models','lighting work','environments'],
-      v: S("His 3D work, all in Blender: Golden Hour, Empty Classroom, lit for low sun; One Room, Four Lights, the same room lit as morning, sunset, neon night and late night; and the Faceted Panther you can spin.",
-        "Three Blender pieces: a golden-hour classroom, one room re-lit four ways, and a low-poly faceted panther with amber eyes. Lighting is the story, he says. We agree. We live in the dark.") },
+      v: S("His 3D work, all in Blender: Golden Hour, Empty Classroom, lit for low sun; One Room, Four Lights, the same room lit as morning, sunset, neon night and late night; and SHED, his snake-themed fashion outfit you can turn around.",
+        "Three Blender pieces: a golden-hour classroom, one room re-lit four ways, and SHED, an ivory outfit with oxblood snake embroidery, sewn and cloth-simulated. Lighting is the story, he says. We agree. We live in the dark.") },
     { id:'whyloser', top:1, pri:1, kind:'project', go:'work', k:['why is it called','why the name','why called loser','why loser','name loser','title loser','meaning of loser'],
       v: S("The page doesn't say why it's called LOSER. It does say it's a 1:22 short told with no dialogue, cut to music at about 86 BPM. Ask him the story at " + EMAIL + ". Our theory: irony. Our other theory: we shouldn't have theories.") },
     { id:'applewin', top:1, pri:1, kind:'project', go:'work', f: S("Why not specs? Because people adopt what fits their lives, not what's fanciest. That's the report's whole point.", "Really. Twenty-seven sections. He did the homework so we don't have to."), k:['who wins','who won','winner','apple or meta','meta or apple','which is better apple','who is winning','verdict','conclusion'],
@@ -1244,7 +1250,7 @@ if(sc && window.THREE){
     shown.add(next.d); return compose(next.d, lastTerms);
   }
   const ALIAS = { 'loser':'LOSER', 'who made this':'Who Made This?', 'copyright':'Who Made This?', 'meera':'Who Made This?', 'apple vs meta':'Apple vs Meta: The XR Race', 'xr race':'Apple vs Meta: The XR Race', 'case report':'Apple vs Meta: The XR Race',
-    'orion':'Meta Orion', 'classroom':'Golden Hour, Empty Classroom', 'golden hour':'Golden Hour, Empty Classroom', 'four lights':'One Room, Four Lights', 'the room':'One Room, Four Lights', 'room':'One Room, Four Lights', 'panther':'Faceted Panther' };
+    'orion':'Meta Orion', 'classroom':'Golden Hour, Empty Classroom', 'golden hour':'Golden Hour, Empty Classroom', 'four lights':'One Room, Four Lights', 'the room':'One Room, Four Lights', 'room':'One Room, Four Lights', 'shed':'SHED', 'fashion':'SHED', 'outfit':'SHED', 'snake':'SHED', 'jacket':'SHED' };
   function mentioned(q){ const t = ' ' + q + ' '; let hit = null, len = 0;
     for(const a in ALIAS){ if(t.includes(' ' + a + ' ') && a.length > len){ hit = ALIAS[a]; len = a.length; } }
     return hit ? docs.find(d => d.title === hit) : null; }
@@ -1419,38 +1425,25 @@ if(sc && window.THREE){
   mic.addEventListener('click', () => { if(!panel.hidden) listen(); });
   SYM.ask = ask; // handy for testing in the console
 })();
-/* ---------------- 3D panther (drag to spin) ---------------- */
-const pc = document.getElementById('pan3d');
-if(pc && window.THREE && THREE.GLTFLoader){
-  const R = new THREE.WebGLRenderer({canvas:pc, alpha:true, antialias:true});
-  R.setPixelRatio(Math.min(2, devicePixelRatio||1)); R.outputEncoding = THREE.sRGBEncoding;
-  const S = new THREE.Scene(), C = new THREE.PerspectiveCamera(28, 16/9, .1, 50);
-  C.position.set(0, .95, 4.7); C.lookAt(0, .42, 0);
-  S.add(new THREE.HemisphereLight(0x2a1a1a, 0x0a0203, .45));
-  const k = new THREE.DirectionalLight(0xfff2ee, 1.15); k.position.set(2.5, 3.5, 3); S.add(k);
-  const r1 = new THREE.DirectionalLight(0xff2418, 3.4); r1.position.set(-3, 1.6, -2.5); S.add(r1);
-  const r2 = new THREE.PointLight(0xff3a2a, 2.2, 9); r2.position.set(2.6, .6, -1.8); S.add(r2);
-  const disc = new THREE.Mesh(new THREE.CircleGeometry(1.45, 64), new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.45}));
-  disc.rotation.x = -Math.PI/2; disc.scale.set(1, .55, 1); S.add(disc);
-  const pivot = new THREE.Group(); S.add(pivot);
-  let rot = -.6, vel = 0, drag = false, lx = 0, vis = true, loaded = false;
-  new THREE.GLTFLoader().load('work/panther.glb', g => {
-    const m = g.scene, box = new THREE.Box3().setFromObject(m), c = box.getCenter(new THREE.Vector3());
-    m.position.set(-c.x, -box.min.y, -c.z);
-    m.traverse(o => { if(o.isMesh && o.material && o.material.name === 'PantherBlack'){
-      o.material = new THREE.MeshPhysicalMaterial({color:0x040405, roughness:.34, metalness:.12, clearcoat:.7, clearcoatRoughness:.22, flatShading:true}); } });
-    pivot.add(m); loaded = true; draw();
-  });
-  function size(){ const w = pc.clientWidth, h = pc.clientHeight; if(!w||!h) return; R.setSize(w, h, false); C.aspect = w/h;
-    C.position.z = w/h < 1.2 ? 6.6 : 4.7; C.updateProjectionMatrix(); }
+/* ---------------- SHED turnaround (drag to turn) ---------------- */
+const shc = document.getElementById('shedtt');
+if(shc){
+  const N = 36, imgs = [], g = shc.getContext('2d');
+  let pos = 0, vel = 0, drag = false, lx = 0, vis = false, ready_ = 0, last = performance.now(), started = false;
+  function size(){ const r = devicePixelRatio > 1 ? 2 : 1; shc.width = shc.clientWidth * r; shc.height = shc.clientHeight * r; draw(); }
+  function draw(){ const i = ((Math.round(pos) % N) + N) % N, im = imgs[i]; if(!im || !im.complete || !im.naturalWidth) return;
+    const cw = shc.width, ch = shc.height, s = Math.max(cw / im.naturalWidth, ch / im.naturalHeight), w = im.naturalWidth * s, h = im.naturalHeight * s;
+    g.drawImage(im, (cw - w) / 2, (ch - h) / 2, w, h); }
+  function load(){ if(started) return; started = true;
+    for(let i = 0; i < N; i++){ const im = new Image(); im.decoding = 'async'; im.onload = () => { ready_++; if(i === 0) draw(); };
+      im.src = 'work/shed/tt_' + String(i).padStart(2, '0') + '.jpg'; imgs.push(im); } }
   size(); addEventListener('resize', size);
-  pc.addEventListener('pointerdown', e => { drag = true; lx = e.clientX; vel = 0; pc.setPointerCapture(e.pointerId); growl(true); });
-  pc.addEventListener('pointermove', e => { if(!drag) return; const d = (e.clientX - lx) * .012; rot += d; vel = d; lx = e.clientX; if(RM) draw(); });
-  const up = () => { drag = false; }; pc.addEventListener('pointerup', up); pc.addEventListener('pointercancel', up);
-  function draw(){ pivot.rotation.y = rot; R.render(S, C); }
-  function tick(){ if(!vis) return; if(!drag){ vel *= .95; rot += vel + (RM ? 0 : .004); } if(loaded) draw(); requestAnimationFrame(tick); }
-  new IntersectionObserver(es => { const was = vis; vis = es[0].isIntersecting; if(vis && !was) tick(); }, {threshold:0}).observe(pc);
-  tick();
+  shc.addEventListener('pointerdown', e => { drag = true; lx = e.clientX; vel = 0; shc.setPointerCapture(e.pointerId); hiss(); });
+  shc.addEventListener('pointermove', e => { if(!drag) return; const d = (e.clientX - lx) / 14; pos -= d; vel = -d; lx = e.clientX; draw(); });
+  const up = () => { drag = false; }; shc.addEventListener('pointerup', up); shc.addEventListener('pointercancel', up);
+  function tick(now){ if(!vis) return; const dt = Math.min(64, now - last); last = now;
+    if(!drag){ vel *= .93; pos += vel + (RM || ready_ < N ? 0 : dt / 120); } draw(); requestAnimationFrame(tick); }
+  new IntersectionObserver(es => { const was = vis; vis = es[0].isIntersecting; if(vis){ load(); size(); if(!was){ last = performance.now(); requestAnimationFrame(tick); } } }, {rootMargin:'400px 0px'}).observe(shc);
 }
 })();
 </script>
