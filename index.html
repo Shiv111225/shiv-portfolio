@@ -161,6 +161,22 @@ p{margin:0;color:#cfcac2;max-width:62ch}
 .key.top .meta b{color:var(--amber)}
 .key.down .cap,.key:active .cap{transform:translateY(5px);box-shadow:inset 0 2px 8px rgba(0,0,0,.8)}
 .key.sel .cap{border-color:var(--red);box-shadow:0 0 0 1px var(--red),0 0 22px rgba(184,20,28,.35)}
+/* 3D hero panther */
+.hero-art canvas{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;transition:opacity .6s}
+.hero-art.gl canvas{opacity:1}
+/* scroll symbiote vine */
+#vine{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;display:block}
+/* 3D keyboard */
+.board{perspective:1100px;perspective-origin:50% 20%}
+.keys{transform-style:preserve-3d;transform:rotateX(calc(24deg + var(--kx,0deg))) rotateY(var(--ky,0deg));transition:transform .25s ease-out;transform-origin:50% 60%}
+.key{transform-style:preserve-3d;background:#020203;padding:0;box-shadow:0 0 0 1px #000}
+.key .cap{transform-style:preserve-3d;transform:translateZ(16px);transition:transform .08s,box-shadow .07s,border-color .2s;
+  background:linear-gradient(calc(160deg + var(--ky,0deg) * 4),#34343d,#121216 62%)}
+.key .cap::before{content:"";position:absolute;left:3px;right:3px;top:100%;height:16px;transform-origin:50% 0;transform:rotateX(-90deg);background:linear-gradient(#141418,#050506);border-radius:0 0 4px 4px}
+.key .cap::after{content:"";position:absolute;top:3px;bottom:3px;left:100%;width:16px;transform-origin:0 50%;transform:rotateY(90deg);background:linear-gradient(90deg,#0e0e12,#040405)}
+.key.top .cap::before{background:linear-gradient(#3a2c10,#120e06)}
+.key.down .cap,.key:active .cap{transform:translateZ(3px);box-shadow:inset 0 2px 8px rgba(0,0,0,.8)}
+@media (max-width:720px){.keys{transform:rotateX(16deg)}.key .cap{transform:translateZ(10px)}.key .cap::before{height:10px}.key .cap::after{width:10px}}
 .readout{background:var(--gloss);border:1px solid var(--line);border-radius:22px;padding:26px;position:sticky;top:90px}
 .readout .lab{font:500 12px var(--f-mono);color:var(--mute)}
 .readout h3{font:700 clamp(24px,3vw,34px)/1.1 var(--f-display);margin:10px 0 6px}
@@ -251,7 +267,7 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
 </nav>
 
 <header class="hero" id="top">
-  <div class="hero-art" aria-hidden="true"><img src="panther.jpg" alt=""></div>
+  <div class="hero-art" aria-hidden="true"><img src="panther.jpg" alt=""><canvas id="pan3dh"></canvas></div>
   <canvas id="sym3d" aria-label="The symbiote. Click it to ask about Shiv." role="button"></canvas>
   <canvas id="goo3d" aria-hidden="true"></canvas>
   <div class="hero-txt">
@@ -416,6 +432,7 @@ footer{border-top:1px solid var(--line);padding-block:26px;max-width:1180px;marg
   </form>
 </div>
 <canvas id="trail" aria-hidden="true"></canvas>
+<canvas id="vine" aria-hidden="true"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/MarchingCubes.js"></script>
@@ -1424,6 +1441,84 @@ if(sc && window.THREE){
   }
   mic.addEventListener('click', () => { if(!panel.hidden) listen(); });
   SYM.ask = ask; // handy for testing in the console
+})();
+/* ---------------- 3D hero panther: depth-mapped, tilts with the cursor ---------------- */
+(() => { const hc = document.getElementById('pan3dh'), art = hc && hc.parentElement; if(!hc || !window.THREE) return;
+  let R; try { R = new THREE.WebGLRenderer({canvas:hc, alpha:true, antialias:false}); } catch(e){ return; }
+  R.setPixelRatio(Math.min(1.5, devicePixelRatio||1));
+  const L = new THREE.TextureLoader(), u = { col:{value:null}, dep:{value:null}, m:{value:new THREE.Vector2()}, asp:{value:1}, pos:{value:new THREE.Vector2(.62,.40)}, t:{value:0} };
+  const mat = new THREE.ShaderMaterial({ uniforms:u, transparent:true,
+    vertexShader:'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+    fragmentShader:`precision highp float; varying vec2 v; uniform sampler2D col, dep; uniform vec2 m, pos; uniform float asp, t;
+      vec2 fit(vec2 p){ float ia = 1400./903.; vec2 q = p; if(asp < ia){ float f = asp/ia; q.x = pos.x*(1.-f) + p.x*f; } else { float f = ia/asp; q.y = (1.-pos.y)*(1.-f) + p.y*f; }
+        return (q - .5) / (1.04 + .015*sin(t*.7)) + .5; }
+      void main(){ vec2 p = fit(v); float d = texture2D(dep, p).r; vec2 o = m * vec2(-.034, .026);
+        p += o * (d - .32); d = texture2D(dep, p).r; p += o * (d - texture2D(dep, p - o*.5).r) * .5;
+        vec3 c = texture2D(col, p).rgb; float e = .004;
+        vec3 n = normalize(vec3(texture2D(dep, p - vec2(e,0.)).r - texture2D(dep, p + vec2(e,0.)).r, texture2D(dep, p - vec2(0.,e)).r - texture2D(dep, p + vec2(0.,e)).r, .09));
+        vec3 l = normalize(vec3(m.x*1.2 + .2, m.y*1.2 + .35, .7)); float sp = pow(max(dot(n, l), 0.), 6.) * smoothstep(.2, .45, d);
+        c += vec3(1., .2, .14) * sp * .13 + vec3(1.) * pow(sp, 4.) * .07; c *= .94 + .1 * d;
+        gl_FragColor = vec4(c, 1.); }` });
+  const S = new THREE.Scene(), C = new THREE.Camera(); S.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2), mat));
+  let n = 0, vis = true, tx = 0, ty = 0, moved = 0; const t0 = performance.now();
+  const ready = () => { if(++n < 2) return; art.classList.add('gl'); size(); loop(); };
+  u.col.value = L.load('panther.jpg', ready); u.dep.value = L.load('panther_depth.png', ready);
+  function size(){ const w = hc.clientWidth, h = hc.clientHeight; if(!w||!h) return; R.setSize(w, h, false); u.asp.value = w/h;
+    if(innerWidth <= 720) u.pos.value.set(.88,.35); else u.pos.value.set(.62,.40); }
+  addEventListener('resize', size);
+  addEventListener('pointermove', e => { if(e.pointerType === 'touch') return; tx = (e.clientX/innerWidth)*2-1; ty = 1-(e.clientY/innerHeight)*2; moved = performance.now(); }, {passive:true});
+  new IntersectionObserver(es => { const was = vis; vis = es[0].isIntersecting; if(vis && !was) loop(); }).observe(hc);
+  function loop(){ if(!vis || n < 2) return; const t = (performance.now()-t0)/1000; u.t.value = RM ? 0 : t;
+    let gx = tx, gy = ty; if(!RM && performance.now() - moved > 2500){ gx = Math.sin(t*.5)*.55; gy = Math.cos(t*.37)*.35; }
+    u.m.value.x += (gx - u.m.value.x)*.06; u.m.value.y += (gy - u.m.value.y)*.06; R.render(S, C); if(!RM) requestAnimationFrame(loop); }
+})();
+/* ---------------- 3D keyboard: the whole board tilts towards the cursor ---------------- */
+(() => { const bd = document.querySelector('.board'); if(!bd || RM) return;
+  bd.addEventListener('pointermove', e => { if(e.pointerType === 'touch') return; const r = bd.getBoundingClientRect();
+    keysEl.style.setProperty('--ky', (((e.clientX-r.left)/r.width-.5)*14).toFixed(2)+'deg'); keysEl.style.setProperty('--kx', ((.5-(e.clientY-r.top)/r.height)*10).toFixed(2)+'deg'); });
+  bd.addEventListener('pointerleave', () => { keysEl.style.setProperty('--ky','0deg'); keysEl.style.setProperty('--kx','0deg'); });
+})();
+/* ---------------- scroll symbiote: a 3D goo vine that grows down the page as you scroll ---------------- */
+(() => { const vc = document.getElementById('vine'); if(!vc || !window.THREE) return;
+  let R; try { R = new THREE.WebGLRenderer({canvas:vc, alpha:true, antialias:true}); } catch(e){ vc.remove(); return; }
+  R.setPixelRatio(Math.min(1.5, devicePixelRatio||1));
+  const S = new THREE.Scene(), C = new THREE.OrthographicCamera(0,1,0,-1,-800,800);
+  const mat = new THREE.MeshPhysicalMaterial({color:0x0c0c0f, emissive:0x1c0406, roughness:.28, metalness:.2, clearcoat:1, clearcoatRoughness:.18});
+  S.add(new THREE.AmbientLight(0x3a2224, 1.2)); const k = new THREE.DirectionalLight(0xffffff, .9); k.position.set(-1, 1.2, 1.4); S.add(k);
+  const rim = new THREE.DirectionalLight(0xff2a22, 4.5); rim.position.set(1.6, -1, .5); S.add(rim); const rim2 = new THREE.DirectionalLight(0xb8141c, 2.2); rim2.position.set(-1.5, -1, .3); S.add(rim2);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), mat); S.add(tip);
+  let tube = null, buds = [], segY = [], pts = [], SEG = 0, RAD = 8, grown = 0, target = 0, on = false, W = 0, H = 0, raf = 0, lastCross = -1, crossY = [];
+  function build(){ W = innerWidth; H = innerHeight; R.setSize(W, H, false);
+    const g = (W - Math.min(1180, W)) / 2; on = g >= 64 && W >= 900; vc.style.display = on ? 'block' : 'none'; if(!on) return;
+    const lanes = [W - g*.46, g*.46], top = y => y + scrollY, hero = document.querySelector('.hero').getBoundingClientRect();
+    const secs = ['about','skills','work','threed','credentials','contact'].map(id => document.getElementById(id)).filter(Boolean).map(e => top(e.getBoundingClientRect().top));
+    const end = document.documentElement.scrollHeight - 60, P = []; let side = 0, y = top(hero.bottom) - 30; crossY = [];
+    const lane = (y0, y1) => { const n = Math.max(2, Math.round((y1-y0)/150)); for(let i=0;i<=n;i++){ const yy = y0 + (y1-y0)*i/n;
+      P.push(new THREE.Vector3(lanes[side] + Math.sin(yy*.011 + side*2)*g*.2, -yy, Math.sin(yy*.007)*30)); } };
+    secs.forEach((sy, i) => { const cy = sy + 34; if(cy - y > 120) lane(y, cy - 60); else P.push(new THREE.Vector3(lanes[side], -y, 0));
+      const a = lanes[side], b = lanes[1-side]; crossY.push(cy);
+      for(let j=1;j<=5;j++){ const f = j/6; P.push(new THREE.Vector3(a + (b-a)*f, -(cy + Math.sin(f*Math.PI*2)*16), 40*Math.sin(f*Math.PI))); }
+      side = 1 - side; y = cy + 60; });
+    lane(y, end);
+    const curve = new THREE.CatmullRomCurve3(P, false, 'catmullrom', .5); SEG = Math.min(2400, Math.round(curve.getLength()/7)); RAD = Math.max(9, Math.min(15, g*.1));
+    if(tube){ S.remove(tube); tube.geometry.dispose(); } buds.forEach(b => S.remove(b)); buds = [];
+    tube = new THREE.Mesh(new THREE.TubeGeometry(curve, SEG, RAD, 10, false), mat); S.add(tube);
+    pts = curve.getSpacedPoints(SEG); segY = pts.map(p => -p.y); let mx = 0; segY = segY.map(v => (mx = Math.max(mx, v)));
+    for(let i = 40; i < SEG; i += 46 + (i*7)%23){ const b = new THREE.Mesh(tip.geometry, mat), r = RAD*(1.35 + ((i*13)%10)/14); b.scale.set(r, r*1.3, r); b.position.copy(pts[i]); b.userData.i = i; S.add(b); buds.push(b); }
+    draw(true); }
+  function draw(force){ if(!on) return; target = Math.max(target, scrollY + H*.72); if(RM) grown = target = 1e9; const d = target - grown;
+    const now = performance.now(), dt = Math.min(200, now - (draw.t || now)); draw.t = now;
+    if(Math.abs(d) > .5) grown += d*(1 - Math.exp(-Math.max(16, dt)/260)); else grown = target;
+    let i = 0, lo = 0, hi = SEG; while(lo < hi){ const m = (lo+hi+1) >> 1; if(segY[m] <= grown) lo = m; else hi = m-1; } i = lo;
+    tube.geometry.setDrawRange(0, i*10*6); buds.forEach(b => { b.visible = b.userData.i <= i; });
+    const p = pts[Math.min(i, SEG)]; tip.position.copy(p); tip.scale.setScalar(RAD*1.7); tip.visible = i < SEG;
+    const c = crossY.findIndex(v => v > grown) ; const passed = c < 0 ? crossY.length : c; if(passed > lastCross){ if(lastCross >= 0) squelch(); lastCross = passed; }
+    C.left = 0; C.right = W; C.top = -scrollY; C.bottom = -(scrollY + H); C.updateProjectionMatrix(); R.render(S, C);
+    if(Math.abs(target - grown) > .5) kick(); }
+  function kick(){ if(!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); }
+  addEventListener('scroll', kick, {passive:true}); let rt = 0; const re = () => { clearTimeout(rt); rt = setTimeout(build, 180); };
+  addEventListener('resize', re); addEventListener('load', re); if(window.ResizeObserver) new ResizeObserver(re).observe(document.body);
+  build();
 })();
 /* ---------------- SHED turnaround (drag to turn) ---------------- */
 const shc = document.getElementById('shedtt');
